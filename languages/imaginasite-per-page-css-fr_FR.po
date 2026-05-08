@@ -1,0 +1,47 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Imaginasite Per Page CSS\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-05-02 14:00+0000\n"
+"PO-Revision-Date: 2026-05-02 14:00+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: fr_FR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 3.0\n"
+"X-Domain: imaginasite-per-page-css\n"
+
+msgid "Specific CSS for this page"
+msgstr "Styles CSS pour cette page"
+
+msgid "Specific CSS for this post"
+msgstr "Styles CSS pour cet article"
+
+msgid "Syntax highlighting disabled in your profile."
+msgstr "La coloration syntaxique est désactivée dans votre profil."
+
+msgid "JS Error: "
+msgstr "Erreur JS : "
+
+msgid "Timeout: wp.codeEditor unavailable"
+msgstr "Temps écoulé : wp.codeEditor n'est pas disponible"
+
+msgid "DIAGNOSTIC:\n"
+msgstr "DIAGNOSTIC :\n"
+
+msgid "- Status: "
+msgstr "- Statut : "
+
+msgid "- wp.codeEditor: "
+msgstr "- wp.codeEditor : "
+
+msgid "- Container: "
+msgstr "- Conteneur : "
+
+msgid "Adds a CSS style editing field with live preview in pages and posts, automatically injected into the head tag."
+msgstr "Ajoute un champ d'édition de styles CSS avec aperçu en direct dans les pages et articles, injecté automatiquement dans la balise head."
+
+msgid "Imaginasite Per Page CSS"
+msgstr "Imaginasite Per Page CSS"
