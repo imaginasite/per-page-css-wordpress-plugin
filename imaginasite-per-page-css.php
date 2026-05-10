@@ -81,6 +81,12 @@ class Imaginasite_Per_Page_CSS_Plugin
 		}
 
 		$screen = function_exists('get_current_screen') ? get_current_screen() : null;
+
+		// Secure Gutenberg enqueue: never load assets on FSE screens
+		if ($screen && (strpos($screen->id, 'site-editor') !== false || $screen->base === 'site-editor')) {
+			return;
+		}
+
 		$post_type = $screen ? $screen->post_type : '';
 
 		if (!in_array($post_type, $this->get_supported_post_types(), true)) {
@@ -152,7 +158,7 @@ class Imaginasite_Per_Page_CSS_Plugin
 		$is_classic_edit = ($hook === 'post.php' || $hook === 'post-new.php');
 
 		// Enqueue CodeMirror if we are on a supported editing screen
-		if ($is_classic_edit || in_array($post_type, $this->get_supported_post_types(), true)) {
+		if (in_array($post_type, $this->get_supported_post_types(), true)) {
 			$settings = wp_enqueue_code_editor(array('type' => 'text/css'));
 			if (false !== $settings && $is_classic_edit) {
 				wp_add_inline_script(
@@ -227,6 +233,11 @@ class Imaginasite_Per_Page_CSS_Plugin
 		if (!current_user_can('edit_post', $post_id)) {
 			return;
 		}
+		$post_type = get_post_type($post_id);
+
+		if (!in_array($post_type, $this->get_supported_post_types(), true)) {
+			return;
+		}
 
 		if (isset($_POST['page_post_specific_css_field'])) {
 			update_post_meta(
@@ -293,10 +304,26 @@ class Imaginasite_Per_Page_CSS_Plugin
 	 */
 	private function get_supported_post_types()
 	{
+		$post_types = get_post_types(
+			array(
+				'public' => true,
+				'show_ui' => true,
+			),
+			'names'
+		);
+
+		$excluded_fse_types = array(
+			'wp_template',
+			'wp_template_part',
+			'wp_global_styles',
+			'wp_navigation',
+			'wp_block',
+		);
+
 		return array_filter(
-			get_post_types(array('show_ui' => true), 'names'),
-			function ($pt) {
-				return post_type_supports($pt, 'editor');
+			$post_types,
+			function ($pt) use ($excluded_fse_types) {
+				return post_type_supports($pt, 'editor') && !in_array($pt, $excluded_fse_types, true);
 			}
 		);
 	}
