@@ -122,11 +122,19 @@ The plugin restricts CSS editing to administrators and sanitizes output before r
 
 == Upgrade Notice ==
 
+= 1.2.1 =
+
+* Prevented script from loading on Site Editor and FSE template screens for better compatibility.
+
 = 1.2.0 =
 
 Initial public release.
 
 == Changelog ==
+
+= 1.2.1 =
+
+* Fix: Prevented CSS panel and JavaScript from loading on Site Editor and FSE template screens to avoid conflicts.
 
 = 1.2.0 =
 

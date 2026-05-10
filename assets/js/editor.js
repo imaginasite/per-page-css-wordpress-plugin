@@ -255,8 +255,10 @@
 
 	const MetaField = compose(
 		withSelect(function (select) {
-			const meta = select('core/editor').getEditedPostAttribute('meta') || {};
-			return { meta: meta };
+			const editor = select('core/editor');
+			const meta = editor.getEditedPostAttribute('meta') || {};
+			const postType = editor.getCurrentPostType();
+			return { meta: meta, postType: postType };
 		}),
 		withDispatch(function (dispatch) {
 			return {
@@ -275,6 +277,20 @@
 		const textareaRefCallback = useCallback(function (node) {
 			setTextareaElement(node);
 		}, []);
+
+		// List of FSE post types to dynamically exclude in the editor
+		const excludedFseTypes = [
+			'wp_template',
+			'wp_template_part',
+			'wp_global_styles',
+			'wp_navigation',
+			'wp_block'
+		];
+
+		// Completely hide the panel if switching to template editing
+		if (excludedFseTypes.indexOf(props.postType) !== -1) {
+			return null;
+		}
 
 		useEffect(function () {
 			let isMounted = true;

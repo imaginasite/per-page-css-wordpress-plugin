@@ -100,7 +100,7 @@ class Imaginasite_Per_Page_CSS_Plugin
 			'imaginasite-per-page-css',
 			plugins_url('assets/js/editor.js', __FILE__),
 			array('wp-plugins', 'wp-edit-post', 'wp-element', 'wp-components', 'wp-data', 'wp-compose'),
-			'1.2.0',
+			'1.2.1',
 			true
 		);
 
