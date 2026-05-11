@@ -3,7 +3,7 @@ Contributors: Imaginasite
 Tags: css, custom css, editor, gutenberg, per page css
 Requires at least: 5.8
 Tested up to: 6.9
-Stable tag: 1.2.1
+Stable tag: 1.2.7
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -34,9 +34,8 @@ Gutenberg already covers many styling needs, but it is unlikely that it will eve
 * Compatible with both Gutenberg and Classic Editor
 * Integrated CodeMirror editor with syntax highlighting and code folding
 * Minimalist approach: no settings page, no ads, no unnecessary options
-* Restricted to administrators (`manage_options`) for better control
-* Sanitized output and secure frontend rendering
-
+* Restricted to administrators (`manage_options` and `unfiltered_html`) for better control
+* Sanitized output and CSS-only input, administrator-only access, and basic sanitization to prevent HTML/script injection.
 === When to use it ===
 
 This plugin is useful when:
@@ -99,7 +98,7 @@ No. To prevent unintended CSS conflicts, the custom CSS is only injected when vi
 
 = Who can edit the CSS? =
 
-Only administrators or users with the `manage_options` capability can edit the CSS field.
+Only administrators or users with the `manage_options` and `unfiltered_html` capabilities can edit the CSS field.
 
 = Where is the CSS output? =
 
@@ -111,7 +110,7 @@ CSS added through the plugin will no longer be injected into your pages or posts
 
 = Is the plugin secure? =
 
-The plugin restricts CSS editing to administrators and sanitizes output before rendering on the frontend.
+The plugin restricts CSS editing to administrators with proper privileges and sanitizes output before rendering on the frontend.
 
 == Screenshots ==
 
@@ -131,6 +130,26 @@ The plugin restricts CSS editing to administrators and sanitizes output before r
 Initial public release.
 
 == Changelog ==
+
+= 1.2.7 =
+
+* Enhanced security and UX: Implemented real-time CSS validation with editor locking in Gutenberg, added error notices, and refined server-side data protection to prevent accidental loss of valid CSS.
+
+= 1.2.6 =
+
+* Improved UX: Added server-side protection to prevent overwriting valid CSS with invalid input, and implemented real-time validation notices in Gutenberg.
+
+= 1.2.4 =
+
+* Enhanced security: Refined CSS sanitization, added server-side validation for output, and implemented revision checks.
+
+= 1.2.3 =
+
+* Enhanced security: Added server-side CSS validation and refined sanitization.
+
+= 1.2.2 =
+
+* Enhanced security: Added `unfiltered_html` capability check for CSS editing.
 
 = 1.2.1 =
 

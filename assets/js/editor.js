@@ -15,12 +15,15 @@
 
 	const STYLE_ID = 'mg-live-css';
 	const EDITOR_STYLE_ID = 'mg-editor-style';
+	const LOCK_NAME = 'imaginasite-per-page-css-invalid-css';
+	const NOTICE_ID = 'imaginasite-css-error';
 
 	let lastIframe = null;
 	let lastInjectedCSS = null;
 	let lastInjectedTarget = null;
 	let debounceTimer = null;
 	let observerScheduled = false;
+	let lastValidationInvalid = null;
 
 	if (!document.getElementById(EDITOR_STYLE_ID)) {
 		const style = document.createElement('style');
@@ -144,8 +147,39 @@
 		});
 	}
 
+	function validateCSS(css) {
+		if (!css) return true;
+
+		// 1. Markup check: matches </? followed by a word character
+		if (/<\/?\w+/.test(css)) {
+			return false;
+		}
+
+		// 2. Imbalanced curly brackets
+		const openCurly = (css.match(/{/g) || []).length;
+		const closeCurly = (css.match(/}/g) || []).length;
+		if (openCurly !== closeCurly) return false;
+
+		// 3. Imbalanced square brackets
+		const openSquare = (css.match(/\[/g) || []).length;
+		const closeSquare = (css.match(/\]/g) || []).length;
+		if (openSquare !== closeSquare) return false;
+
+		// 4. Unterminated comment
+		if (/\/\*[^*]*(?:\*(?!\/)[^*]*)*$/.test(css)) {
+			return false;
+		}
+
+		// 5. Unsafe or unsupported syntax
+		if (/expression\s*\(|javascript\s*:|vbscript\s*:|@import\b|behavior\s*:|-moz-binding\b/i.test(css)) {
+			return false;
+		}
+
+		return true;
+	}
+
 	function injectPreviewCSS(rawCSS) {
-		const css = buildEditorPreviewCSS(rawCSS);
+		const css = validateCSS(rawCSS || '') ? buildEditorPreviewCSS(rawCSS) : '';
 		const iframe = getEditorCanvasIframe();
 
 		if (iframe) {
@@ -243,6 +277,51 @@
 		schedulePreviewCSSCheck();
 	});
 
+	function getInvalidCssMessage() {
+		return i18n.css_invalid || 'The CSS contains a syntax error or unsupported syntax. Please check missing braces, brackets, comments, @import, javascript:, expression(), behavior:, or -moz-binding.';
+	}
+
+	function setPostSavingLocked(locked) {
+		const editorDispatch = wp.data.dispatch('core/editor');
+
+		if (!editorDispatch) {
+			return;
+		}
+
+		if (locked && typeof editorDispatch.lockPostSaving === 'function') {
+			editorDispatch.lockPostSaving(LOCK_NAME);
+		} else if (!locked && typeof editorDispatch.unlockPostSaving === 'function') {
+			editorDispatch.unlockPostSaving(LOCK_NAME);
+		}
+	}
+
+	function updateCSSValidationState(css) {
+		const invalid = !!css && !validateCSS(css);
+
+		if (invalid === lastValidationInvalid) {
+			return invalid;
+		}
+
+		lastValidationInvalid = invalid;
+		setPostSavingLocked(invalid);
+
+		if (!invalid) {
+			const noticesDispatch = wp.data.dispatch('core/notices');
+
+			if (noticesDispatch && typeof noticesDispatch.removeNotice === 'function') {
+				noticesDispatch.removeNotice(NOTICE_ID);
+			}
+		}
+
+		return invalid;
+	}
+
+	const unsubscribeValidationLock = wp.data.subscribe(function () {
+		updateCSSValidationState(getCurrentCSS());
+	});
+
+	updateCSSValidationState(getCurrentCSS());
+
 	window.addEventListener('beforeunload', function () {
 		if (editorDomObserver) {
 			editorDomObserver.disconnect();
@@ -251,6 +330,12 @@
 		if (typeof unsubscribePreviewCSS === 'function') {
 			unsubscribePreviewCSS();
 		}
+
+		if (typeof unsubscribeValidationLock === 'function') {
+			unsubscribeValidationLock();
+		}
+
+		setPostSavingLocked(false);
 	});
 
 	const MetaField = compose(
@@ -273,6 +358,7 @@
 		const editorRef = useRef(null);
 		const [status, setStatus] = useState('loading');
 		const [textareaElement, setTextareaElement] = useState(null);
+		const [validationError, setValidationError] = useState(false);
 
 		const textareaRefCallback = useCallback(function (node) {
 			setTextareaElement(node);
@@ -337,6 +423,9 @@
 
 						props.setMeta(val);
 
+						const invalid = updateCSSValidationState(val);
+						setValidationError(invalid);
+
 						clearTimeout(localDebounceTimer);
 
 						localDebounceTimer = setTimeout(function () {
@@ -346,7 +435,9 @@
 
 					setStatus('loaded');
 
-					injectPreviewCSS(props.meta._imaginasite_per_page_css || getCurrentCSS());
+					const initialCSS = props.meta._imaginasite_per_page_css || getCurrentCSS();
+					setValidationError(updateCSSValidationState(initialCSS));
+					injectPreviewCSS(initialCSS);
 
 					if (window.ResizeObserver) {
 						const wrapper = $textarea.closest('.mg-code-editor-wrapper')[0];
@@ -470,6 +561,23 @@
 					)
 					: null,
 
+				validationError
+					? el(
+						'div',
+						{
+							style: {
+								padding: '8px',
+								background: '#fff8e5',
+								border: '1px solid #dba617',
+								fontSize: '12px',
+								marginBottom: '10px',
+								borderRadius: '3px'
+							}
+						},
+						getInvalidCssMessage()
+					)
+					: null,
+
 				el(
 					'div',
 					{
@@ -492,6 +600,9 @@
 							const val = e.target ? e.target.value : e;
 
 							props.setMeta(val);
+
+							const invalid = updateCSSValidationState(val);
+							setValidationError(invalid);
 
 							clearTimeout(debounceTimer);
 
@@ -518,6 +629,9 @@
 							const val = e.target ? e.target.value : e;
 
 							props.setMeta(val);
+
+							const invalid = updateCSSValidationState(val);
+							setValidationError(invalid);
 
 							clearTimeout(debounceTimer);
 
