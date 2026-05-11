@@ -35,7 +35,8 @@ Gutenberg already covers many styling needs, but it is unlikely that it will eve
 * Integrated CodeMirror editor with syntax highlighting and code folding
 * Minimalist approach: no settings page, no ads, no unnecessary options
 * Restricted to administrators (`manage_options` and `unfiltered_html`) for better control
-* Sanitized output and CSS-only input, administrator-only access, and basic sanitization to prevent HTML/script injection.
+* CSS-only input with administrator-only access and validation safeguards
+
 === When to use it ===
 
 This plugin is useful when:
@@ -102,7 +103,7 @@ Only administrators or users with the `manage_options` and `unfiltered_html` cap
 
 = Where is the CSS output? =
 
-The CSS is securely injected into the `<head>` tag of the frontend page output.
+The CSS is injected into the `<head>` tag of the frontend page output.
 
 = What happens if I uninstall the plugin? =
 
@@ -121,13 +122,11 @@ The plugin restricts CSS editing to administrators with proper privileges and sa
 
 == Upgrade Notice ==
 
+= 1.2.7 =
+This version significantly improves security and user experience with real-time CSS validation, editor locking, and enhanced data protection.
+
 = 1.2.1 =
-
-* Prevented script from loading on Site Editor and FSE template screens for better compatibility.
-
-= 1.2.0 =
-
-Initial public release.
+Prevented script from loading on Site Editor and FSE template screens for better compatibility.
 
 == Changelog ==
 
