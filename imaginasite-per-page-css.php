@@ -432,3 +432,11 @@ class Imaginasite_Per_Page_CSS_Plugin
 
 // Start the plugin.
 new Imaginasite_Per_Page_CSS_Plugin();
+
+/**
+ * Initialize GitHub Updater for automatic updates.
+ */
+if (is_admin()) {
+	require_once plugin_dir_path(__FILE__) . 'includes/github-updater.php';
+	new Imaginasite_GitHub_Updater(__FILE__, 'imaginasite/per-page-css-wordpress-plugin');
+}
