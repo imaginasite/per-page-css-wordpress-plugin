@@ -1,0 +1,6 @@
+.DS_Store
+Thumbs.db
+*.tmp
+.fuse_hidden*
+*.zip
+*.tar.gz
