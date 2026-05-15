@@ -29,7 +29,7 @@
 	let lastInjectedCSS = null;
 	let debounceTimer = null;
 	let lastValidationInvalid = null;
-	let iframeLoadBound = false;
+	let boundIframe = null;
 
 	if (!document.getElementById(EDITOR_STYLE_ID)) {
 		const style = document.createElement('style');
@@ -209,39 +209,46 @@
 
 	function injectPreviewCSS(rawCSS, force) {
 		const cssValue = rawCSS || '';
+		const iframe = getEditorCanvasIframe();
 
-		if (!force && cssValue === lastInjectedCSS) {
+		let targetDoc = document;
+		let usingIframe = false;
+
+		if (iframe) {
+			try {
+				targetDoc = iframe.contentDocument || iframe.contentWindow.document;
+				usingIframe = true;
+			} catch (e) {
+				targetDoc = document;
+				usingIframe = false;
+			}
+		}
+
+		const existingStyle = targetDoc && targetDoc.getElementById(STYLE_ID);
+
+		if (!force && cssValue === lastInjectedCSS && existingStyle) {
 			return;
 		}
 
 		const css = validateCSS(cssValue) ? buildEditorPreviewCSS(cssValue) : '';
-		const iframe = getEditorCanvasIframe();
 
-		if (iframe) {
-			try {
-				const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+		injectIntoDoc(targetDoc, css);
 
-				injectIntoDoc(iframeDoc, css);
+		if (usingIframe) {
+			if (iframe !== boundIframe) {
+				boundIframe = iframe;
 
-				if (!iframeLoadBound) {
-					iframeLoadBound = true;
-
-					iframe.addEventListener('load', function () {
-						lastInjectedCSS = null;
-						injectPreviewCSS(getCurrentCSS(), true);
-					});
-				}
-
-				const mainStyle = document.getElementById(STYLE_ID);
-
-				if (mainStyle) {
-					mainStyle.remove();
-				}
-			} catch (e) {
-				injectIntoDoc(document, css);
+				iframe.addEventListener('load', function () {
+					lastInjectedCSS = null;
+					injectPreviewCSS(getCurrentCSS(), true);
+				});
 			}
-		} else {
-			injectIntoDoc(document, css);
+
+			const mainStyle = document.getElementById(STYLE_ID);
+
+			if (mainStyle) {
+				mainStyle.remove();
+			}
 		}
 
 		lastInjectedCSS = cssValue;
