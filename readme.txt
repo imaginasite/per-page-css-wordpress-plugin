@@ -3,7 +3,7 @@ Contributors: Imaginasite
 Tags: css, custom css, editor, gutenberg, per page css
 Requires at least: 5.8
 Tested up to: 6.9
-Stable tag: 1.6.0
+Stable tag: 1.6.1
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -138,6 +138,10 @@ This version significantly improves security and user experience with real-time 
 Prevented script from loading on Site Editor and FSE template screens for better compatibility.
 
 == Changelog ==
+
+= 1.6.1 =
+
+* Maintenance: Minor code cleanup and final refinements for the 1.6 branch.
 
 = 1.6.0 =
 
