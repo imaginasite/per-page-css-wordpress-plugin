@@ -366,7 +366,6 @@
 
 		// List of FSE post types to dynamically exclude in the editor
 		const excludedFseTypes = [
-			'wp_template',
 			'wp_template_part',
 			'wp_global_styles',
 			'wp_navigation',
@@ -575,6 +574,24 @@
 							}
 						},
 						getInvalidCssMessage()
+					)
+					: null,
+
+				props.postType === 'wp_template'
+					? el(
+						'div',
+						{
+							style: {
+								padding: '8px',
+								background: '#f0f6fc',
+								border: '1px solid #72aee6',
+								fontSize: '12px',
+								marginBottom: '10px',
+								borderRadius: '3px'
+							}
+						},
+						i18n.template_notice ||
+							'This CSS will be added to the frontend only when this template is used to render the current page. It will not apply to template parts, patterns, or other templates. Note: for theme templates that have never been saved in the Site Editor, WordPress may need to create a database version of the template before custom CSS can be stored.'
 					)
 					: null,
 
