@@ -3,7 +3,7 @@
  * Plugin Name: Imaginasite Per Page CSS
  * Plugin URI: https://www.imaginasite.com/per-page-css-wordpress-plugin
  * Description: Adds a CSS style editing field in pages and posts, automatically injected into the head tag with live preview for Gutenberg editor.
- * Version: 1.5.1
+ * Version: 1.5.2
  * Author: Anis MK
  * Author URI: https://www.imaginasite.com
  * Text Domain: imaginasite-per-page-css
@@ -229,7 +229,7 @@ class Imaginasite_Per_Page_CSS_Plugin
 			'imaginasite-per-page-css',
 			plugins_url('assets/js/editor.js', __FILE__),
 			$dependencies,
-			'1.5.1',
+			'1.5.2',
 			true
 		);
 
@@ -463,7 +463,7 @@ class Imaginasite_Per_Page_CSS_Plugin
 			return absint($this->current_block_template->wp_id);
 		}
 
-		if (!function_exists('get_stylesheet')) {
+		if (!function_exists('get_block_template') || !function_exists('get_stylesheet')) {
 			return 0;
 		}
 
@@ -478,6 +478,10 @@ class Imaginasite_Per_Page_CSS_Plugin
 			$candidates[] = 'home';
 		}
 
+		if (is_page()) {
+			$candidates[] = 'page';
+		}
+
 		if (is_singular()) {
 			$post_type = get_post_type();
 
@@ -487,10 +491,6 @@ class Imaginasite_Per_Page_CSS_Plugin
 
 			$candidates[] = 'single';
 			$candidates[] = 'singular';
-		}
-
-		if (is_page()) {
-			$candidates[] = 'page';
 		}
 
 		if (is_archive()) {
@@ -507,17 +507,11 @@ class Imaginasite_Per_Page_CSS_Plugin
 
 		$candidates[] = 'index';
 
-		$candidates = array_unique($candidates);
+		foreach (array_unique($candidates) as $slug) {
+			$template = get_block_template($theme . '//' . $slug, 'wp_template');
 
-		foreach ($candidates as $slug) {
-			$template_post = get_page_by_path(
-				$theme . '//' . $slug,
-				OBJECT,
-				'wp_template'
-			);
-
-			if ($template_post && !empty($template_post->ID)) {
-				return absint($template_post->ID);
+			if ($template && !empty($template->wp_id)) {
+				return absint($template->wp_id);
 			}
 		}
 

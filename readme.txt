@@ -3,7 +3,7 @@ Contributors: Imaginasite
 Tags: css, custom css, editor, gutenberg, per page css
 Requires at least: 5.8
 Tested up to: 6.9
-Stable tag: 1.5.1
+Stable tag: 1.5.2
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -122,6 +122,9 @@ The plugin restricts CSS editing to administrators with proper privileges and sa
 
 == Upgrade Notice ==
 
+= 1.5.2 =
+Major update: Extended custom CSS functionality to Full Site Editing (FSE) Templates (`wp_template`), allowing per-template CSS injection natively in the Site Editor with full WordPress 6.6+ compatibility and improved template resolution.
+
 = 1.5.1 =
 Major update: Extended custom CSS functionality to Full Site Editing (FSE) Templates (`wp_template`), allowing per-template CSS injection natively in the Site Editor with full WordPress 6.6+ compatibility.
 
@@ -135,6 +138,10 @@ This version significantly improves security and user experience with real-time 
 Prevented script from loading on Site Editor and FSE template screens for better compatibility.
 
 == Changelog ==
+
+= 1.5.2 =
+
+* Fix: Improved FSE template resolution fallback logic using native `get_block_template` for reliable styling.
 
 = 1.5.1 =
 

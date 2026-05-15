@@ -45,3 +45,27 @@ msgstr "Ajoute un champ d'édition de styles CSS avec aperçu en direct dans les
 
 msgid "Imaginasite Per Page CSS"
 msgstr "Imaginasite Per Page CSS"
+
+msgid "Specific CSS for this template"
+msgstr "Styles CSS pour ce template"
+
+msgid "The CSS contains a syntax error or unsupported syntax. Please check missing braces, brackets, comments, @import, javascript:, expression(), behavior:, or -moz-binding."
+msgstr "Le CSS contient une erreur de syntaxe ou une syntaxe non supportée. Veuillez vérifier s'il manque des accolades, crochets, commentaires, @import, javascript:, expression(), behavior:, ou -moz-binding."
+
+msgid "This CSS will be added to the frontend only when this template is used to render the current page. It will not apply to template parts, patterns, or other templates. Note: for theme templates that have never been saved in the Site Editor, WordPress may need to create a database version of the template before custom CSS can be stored."
+msgstr "Ce CSS sera ajouté au frontend uniquement lorsque ce template est utilisé pour afficher la page courante. Il ne s’applique pas aux éléments de template, aux compositions, ni aux autres templates. Note : pour les templates du thème qui n’ont jamais été enregistrés dans l’éditeur de site, WordPress peut devoir créer une version en base de données avant que le CSS personnalisé puisse être stocké."
+
+msgid "Markup is not allowed in CSS."
+msgstr "Les balises HTML ne sont pas autorisées dans le CSS."
+
+msgid "CSS contains imbalanced curly brackets."
+msgstr "Le CSS contient un nombre impair d'accolades {}."
+
+msgid "CSS contains imbalanced square brackets."
+msgstr "Le CSS contient un nombre impair de crochets []."
+
+msgid "Sorry, you are not allowed to do that."
+msgstr "Désolé, vous n'êtes pas autorisé à faire cela."
+
+msgid "Invalid CSS."
+msgstr "CSS invalide."

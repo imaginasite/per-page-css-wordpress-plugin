@@ -1,0 +1,114 @@
+# Copyright (C) 2026 Anis MK
+# This file is distributed under the GPLv2 or later.
+msgid ""
+msgstr ""
+"Project-Id-Version: Imaginasite Per Page CSS 1.5.2\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/imaginasite-per-page-css\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2026-05-15T20:37:06+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.12.0\n"
+"X-Domain: imaginasite-per-page-css\n"
+
+#. Plugin Name of the plugin
+#: imaginasite-per-page-css.php
+msgid "Imaginasite Per Page CSS"
+msgstr ""
+
+#. Plugin URI of the plugin
+#: imaginasite-per-page-css.php
+msgid "https://www.imaginasite.com/per-page-css-wordpress-plugin"
+msgstr ""
+
+#. Description of the plugin
+#: imaginasite-per-page-css.php
+msgid "Adds a CSS style editing field in pages and posts, automatically injected into the head tag with live preview for Gutenberg editor."
+msgstr ""
+
+#. Author of the plugin
+#: imaginasite-per-page-css.php
+msgid "Anis MK"
+msgstr ""
+
+#. Author URI of the plugin
+#: imaginasite-per-page-css.php
+msgid "https://www.imaginasite.com"
+msgstr ""
+
+#: imaginasite-per-page-css.php:102
+msgid "Invalid CSS."
+msgstr ""
+
+#: imaginasite-per-page-css.php:237
+msgid "Specific CSS for this template"
+msgstr ""
+
+#: imaginasite-per-page-css.php:239
+#: imaginasite-per-page-css.php:330
+msgid "Specific CSS for this page"
+msgstr ""
+
+#: imaginasite-per-page-css.php:241
+#: imaginasite-per-page-css.php:331
+msgid "Specific CSS for this post"
+msgstr ""
+
+#: imaginasite-per-page-css.php:248
+msgid "Syntax highlighting disabled in your profile."
+msgstr ""
+
+#: imaginasite-per-page-css.php:249
+msgid "JS Error: "
+msgstr ""
+
+#: imaginasite-per-page-css.php:250
+msgid "Timeout: wp.codeEditor unavailable"
+msgstr ""
+
+#: imaginasite-per-page-css.php:252
+msgid "DIAGNOSTIC:\\n"
+msgstr ""
+
+#: imaginasite-per-page-css.php:253
+msgid "- Status: "
+msgstr ""
+
+#: imaginasite-per-page-css.php:254
+msgid "- wp.codeEditor: "
+msgstr ""
+
+#: imaginasite-per-page-css.php:255
+msgid "- Container: "
+msgstr ""
+
+#: imaginasite-per-page-css.php:256
+msgid "The CSS contains a syntax error or unsupported syntax. Please check missing braces, brackets, comments, @import, javascript:, expression(), behavior:, or -moz-binding."
+msgstr ""
+
+#: imaginasite-per-page-css.php:257
+msgid "This CSS will be added to the frontend only when this template is used to render the current page. It will not apply to template parts, patterns, or other templates. Note: for theme templates that have never been saved in the Site Editor, WordPress may need to create a database version of the template before custom CSS can be stored."
+msgstr ""
+
+#: imaginasite-per-page-css.php:533
+msgid "Markup is not allowed in CSS."
+msgstr ""
+
+#: imaginasite-per-page-css.php:537
+msgid "CSS contains imbalanced curly brackets."
+msgstr ""
+
+#: imaginasite-per-page-css.php:541
+msgid "CSS contains imbalanced square brackets."
+msgstr ""
+
+#: imaginasite-per-page-css.php:545
+msgid "CSS contains an unterminated comment."
+msgstr ""
+
+#: imaginasite-per-page-css.php:549
+msgid "This CSS contains unsafe or unsupported syntax."
+msgstr ""
