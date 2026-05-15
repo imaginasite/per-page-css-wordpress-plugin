@@ -26,12 +26,10 @@
 
 	const META_KEY = window.imaginasitePerPageCssData.meta_key || '_imaginasite_per_page_css';
 
-	let lastIframe = null;
 	let lastInjectedCSS = null;
-	let lastInjectedTarget = null;
 	let debounceTimer = null;
-	let observerScheduled = false;
 	let lastValidationInvalid = null;
+	let iframeLoadBound = false;
 
 	if (!document.getElementById(EDITOR_STYLE_ID)) {
 		const style = document.createElement('style');
@@ -209,8 +207,14 @@
 		return true;
 	}
 
-	function injectPreviewCSS(rawCSS) {
-		const css = validateCSS(rawCSS || '') ? buildEditorPreviewCSS(rawCSS) : '';
+	function injectPreviewCSS(rawCSS, force) {
+		const cssValue = rawCSS || '';
+
+		if (!force && cssValue === lastInjectedCSS) {
+			return;
+		}
+
+		const css = validateCSS(cssValue) ? buildEditorPreviewCSS(cssValue) : '';
 		const iframe = getEditorCanvasIframe();
 
 		if (iframe) {
@@ -219,93 +223,42 @@
 
 				injectIntoDoc(iframeDoc, css);
 
-				lastInjectedCSS = rawCSS || '';
-				lastInjectedTarget = iframeDoc;
+				if (!iframeLoadBound) {
+					iframeLoadBound = true;
+
+					iframe.addEventListener('load', function () {
+						lastInjectedCSS = null;
+						injectPreviewCSS(getCurrentCSS(), true);
+					});
+				}
+
+				const mainStyle = document.getElementById(STYLE_ID);
+
+				if (mainStyle) {
+					mainStyle.remove();
+				}
 			} catch (e) {
-				lastInjectedTarget = null;
-			}
-
-			const mainStyle = document.getElementById(STYLE_ID);
-
-			if (mainStyle) {
-				mainStyle.remove();
+				injectIntoDoc(document, css);
 			}
 		} else {
 			injectIntoDoc(document, css);
-
-			lastInjectedCSS = rawCSS || '';
-			lastInjectedTarget = document;
-		}
-	}
-
-	function ensurePreviewCSSInjected() {
-		const iframe = getEditorCanvasIframe();
-		const currentCSS = getCurrentCSS();
-
-		if (iframe) {
-			try {
-				const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-				const styleExists = iframeDoc && iframeDoc.getElementById(STYLE_ID);
-
-				if (
-					iframe !== lastIframe ||
-					iframeDoc !== lastInjectedTarget ||
-					currentCSS !== lastInjectedCSS ||
-					!styleExists
-				) {
-					lastIframe = iframe;
-
-					iframe.addEventListener('load', function () {
-						lastInjectedTarget = null;
-						injectPreviewCSS(getCurrentCSS());
-					});
-
-					injectPreviewCSS(currentCSS);
-				}
-			} catch (e) { }
-		} else {
-			const styleExists = document.getElementById(STYLE_ID);
-
-			if (
-				document !== lastInjectedTarget ||
-				currentCSS !== lastInjectedCSS ||
-				!styleExists
-			) {
-				injectPreviewCSS(currentCSS);
-			}
-		}
-	}
-
-	function schedulePreviewCSSCheck() {
-		if (observerScheduled) {
-			return;
 		}
 
-		observerScheduled = true;
-
-		window.requestAnimationFrame(function () {
-			observerScheduled = false;
-			ensurePreviewCSSInjected();
-		});
+		lastInjectedCSS = cssValue;
 	}
 
-	const editorDomObserver = new MutationObserver(function () {
-		schedulePreviewCSSCheck();
-	});
 
-	if (document.body) {
-		editorDomObserver.observe(document.body, {
-			childList: true,
-			subtree: true
-		});
-	}
 
 	const unsubscribePreviewCSS = wp.data.subscribe(function () {
-		schedulePreviewCSSCheck();
+		clearTimeout(debounceTimer);
+
+		debounceTimer = setTimeout(function () {
+			injectPreviewCSS(getCurrentCSS());
+		}, 300);
 	});
 
 	window.addEventListener('load', function () {
-		schedulePreviewCSSCheck();
+		injectPreviewCSS(getCurrentCSS(), true);
 	});
 
 	function getInvalidCssMessage() {
@@ -350,10 +303,6 @@
 	updateCSSValidationState(getCurrentCSS());
 
 	window.addEventListener('beforeunload', function () {
-		if (editorDomObserver) {
-			editorDomObserver.disconnect();
-		}
-
 		if (typeof unsubscribePreviewCSS === 'function') {
 			unsubscribePreviewCSS();
 		}
@@ -711,7 +660,7 @@
 	});
 
 	setTimeout(function () {
-		schedulePreviewCSSCheck();
+		injectPreviewCSS(getCurrentCSS(), true);
 	}, 500);
 
 
