@@ -3,7 +3,7 @@
  * Plugin Name: Imaginasite Per Page CSS
  * Plugin URI: https://www.imaginasite.com/per-page-css-wordpress-plugin
  * Description: Adds a CSS style editing field in pages and posts, automatically injected into the head tag with live preview for Gutenberg editor.
- * Version: 1.5.0
+ * Version: 1.5.1
  * Author: Anis MK
  * Author URI: https://www.imaginasite.com
  * Text Domain: imaginasite-per-page-css
@@ -44,6 +44,7 @@ class Imaginasite_Per_Page_CSS_Plugin
 		add_action('save_post', array($this, 'save_classic_metabox'));
 		add_action('wp_head', array($this, 'print_css_in_head'), 99);
 		add_filter('get_block_template', array($this, 'capture_current_block_template'), 10, 3);
+		add_action('rest_api_init', array($this, 'register_template_rest_field'));
 
 		// Prevent Gutenberg/REST and classic editor updates from storing invalid CSS.
 		add_filter('add_post_metadata', array($this, 'prevent_invalid_css_meta_update'), 10, 5);
@@ -66,6 +67,50 @@ class Imaginasite_Per_Page_CSS_Plugin
 		}
 
 		return $template;
+	}
+
+	/**
+	 * Register a manual REST API field for wp_template to support meta saving.
+	 * wp_template does not natively support custom-fields via the REST API.
+	 */
+	public function register_template_rest_field()
+	{
+		register_rest_field(
+			'wp_template',
+			self::META_KEY,
+			array(
+				'get_callback'    => function ($template) {
+					$wp_id = isset($template['wp_id']) ? absint($template['wp_id']) : 0;
+					if (!$wp_id) {
+						return '';
+					}
+					return get_post_meta($wp_id, self::META_KEY, true);
+				},
+				'update_callback' => function ($value, $template) {
+					if (!$this->is_allowed()) {
+						return new WP_Error('rest_forbidden', __('Sorry, you are not allowed to do that.'), array('status' => rest_authorization_required_code()));
+					}
+
+					$wp_id = isset($template->wp_id) ? absint($template->wp_id) : 0;
+					if (!$wp_id) {
+						return false;
+					}
+
+					$css = $this->sanitize_css($value);
+
+					if ('' !== trim((string) $value) && is_wp_error($this->validate_css($css))) {
+						return new WP_Error('invalid_css', __('Invalid CSS.', 'imaginasite-per-page-css'), array('status' => 400));
+					}
+
+					update_post_meta($wp_id, self::META_KEY, wp_slash($css));
+					return true;
+				},
+				'schema'          => array(
+					'type'    => 'string',
+					'context' => array('view', 'edit'),
+				),
+			)
+		);
 	}
 
 	/**
@@ -172,11 +217,19 @@ class Imaginasite_Per_Page_CSS_Plugin
 		// Initialize WordPress core code editor settings (CodeMirror) for CSS.
 		$settings = wp_enqueue_code_editor(array('type' => 'text/css'));
 
+		$dependencies = array('wp-plugins', 'wp-editor', 'wp-element', 'wp-components', 'wp-data', 'wp-compose', 'wp-notices');
+
+		if ($screen && (false !== strpos($screen->id, 'site-editor') || 'site-editor' === $screen->base)) {
+			$dependencies[] = 'wp-edit-site';
+		} else {
+			$dependencies[] = 'wp-edit-post';
+		}
+
 		wp_enqueue_script(
 			'imaginasite-per-page-css',
 			plugins_url('assets/js/editor.js', __FILE__),
-			array('wp-plugins', 'wp-edit-post', 'wp-element', 'wp-components', 'wp-data', 'wp-compose', 'wp-notices'),
-			'1.5.0',
+			$dependencies,
+			'1.5.1',
 			true
 		);
 
@@ -189,6 +242,7 @@ class Imaginasite_Per_Page_CSS_Plugin
 		}
 
 		$script_data = array(
+			'meta_key' => self::META_KEY,
 			'settings' => false !== $settings ? $settings : null,
 			'i18n' => array(
 				'disabled' => __('Syntax highlighting disabled in your profile.', 'imaginasite-per-page-css'),
@@ -367,7 +421,6 @@ class Imaginasite_Per_Page_CSS_Plugin
 
 		$css_parts = array();
 
-		// CSS from the singular post/page/CPT.
 		if (is_singular()) {
 			$post_id = get_queried_object_id();
 
@@ -381,12 +434,9 @@ class Imaginasite_Per_Page_CSS_Plugin
 			}
 		}
 
-		// CSS from the FSE template currently used.
-		if (
-			$this->current_block_template &&
-			!empty($this->current_block_template->wp_id)
-		) {
-			$template_id = absint($this->current_block_template->wp_id);
+		$template_id = $this->get_current_template_post_id();
+
+		if ($template_id) {
 			$template_css = get_post_meta($template_id, self::META_KEY, true);
 			$template_css = $this->sanitize_css($template_css);
 
@@ -402,6 +452,76 @@ class Imaginasite_Per_Page_CSS_Plugin
 		echo "\n<style id=\"imaginasite-per-page-css\">\n";
 		echo implode("\n\n", $css_parts); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		echo "\n</style>\n";
+	}
+
+	private function get_current_template_post_id()
+	{
+		if (
+			$this->current_block_template &&
+			!empty($this->current_block_template->wp_id)
+		) {
+			return absint($this->current_block_template->wp_id);
+		}
+
+		if (!function_exists('get_stylesheet')) {
+			return 0;
+		}
+
+		$theme = get_stylesheet();
+		$candidates = array();
+
+		if (is_front_page()) {
+			$candidates[] = 'front-page';
+		}
+
+		if (is_home()) {
+			$candidates[] = 'home';
+		}
+
+		if (is_singular()) {
+			$post_type = get_post_type();
+
+			if ($post_type) {
+				$candidates[] = 'single-' . $post_type;
+			}
+
+			$candidates[] = 'single';
+			$candidates[] = 'singular';
+		}
+
+		if (is_page()) {
+			$candidates[] = 'page';
+		}
+
+		if (is_archive()) {
+			$candidates[] = 'archive';
+		}
+
+		if (is_search()) {
+			$candidates[] = 'search';
+		}
+
+		if (is_404()) {
+			$candidates[] = '404';
+		}
+
+		$candidates[] = 'index';
+
+		$candidates = array_unique($candidates);
+
+		foreach ($candidates as $slug) {
+			$template_post = get_page_by_path(
+				$theme . '//' . $slug,
+				OBJECT,
+				'wp_template'
+			);
+
+			if ($template_post && !empty($template_post->ID)) {
+				return absint($template_post->ID);
+			}
+		}
+
+		return 0;
 	}
 
 	/**

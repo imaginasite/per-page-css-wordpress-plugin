@@ -3,7 +3,10 @@
 	window.mgCodeEditorSettings = window.imaginasitePerPageCssData.settings;
 
 	const el = wp.element.createElement;
-	const PluginDocumentSettingPanel = wp.editPost.PluginDocumentSettingPanel;
+	const PluginDocumentSettingPanel =
+		(wp.editor && wp.editor.PluginDocumentSettingPanel) ||
+		(wp.editPost && wp.editPost.PluginDocumentSettingPanel) ||
+		null;
 	const registerPlugin = wp.plugins.registerPlugin;
 	const withSelect = wp.data.withSelect;
 	const withDispatch = wp.data.withDispatch;
@@ -17,6 +20,7 @@
 	const EDITOR_STYLE_ID = 'mg-editor-style';
 	const LOCK_NAME = 'imaginasite-per-page-css-invalid-css';
 	const NOTICE_ID = 'imaginasite-css-error';
+	const META_KEY = window.imaginasitePerPageCssData.meta_key || '_imaginasite_per_page_css';
 
 	let lastIframe = null;
 	let lastInjectedCSS = null;
@@ -43,13 +47,36 @@
 		document.head.appendChild(style);
 	}
 
-	function getMeta() {
-		return wp.data.select('core/editor').getEditedPostAttribute('meta') || {};
+	function getEditorStore() {
+		const editSite = wp.data.select('core/edit-site');
+
+		if (
+			editSite &&
+			typeof editSite.getCurrentPostType === 'function' &&
+			editSite.getCurrentPostType() === 'wp_template'
+		) {
+			return 'core/edit-site';
+		}
+
+		if (wp.data.select('core/editor')) {
+			return 'core/editor';
+		}
+
+		return null;
 	}
 
 	function getCurrentCSS() {
-		const meta = getMeta();
-		return meta._imaginasite_per_page_css || '';
+		const store = getEditorStore();
+		if (!store) return '';
+
+		const postType = wp.data.select(store).getCurrentPostType ? wp.data.select(store).getCurrentPostType() : '';
+
+		if (postType === 'wp_template') {
+			return wp.data.select(store).getEditedPostAttribute(META_KEY) || '';
+		}
+
+		const meta = wp.data.select(store).getEditedPostAttribute('meta') || {};
+		return meta[META_KEY] || '';
 	}
 
 	function getEditorCanvasIframe() {
@@ -282,7 +309,9 @@
 	}
 
 	function setPostSavingLocked(locked) {
-		const editorDispatch = wp.data.dispatch('core/editor');
+		const store = getEditorStore();
+		if (!store) return;
+		const editorDispatch = wp.data.dispatch(store);
 
 		if (!editorDispatch) {
 			return;
@@ -340,17 +369,36 @@
 
 	const MetaField = compose(
 		withSelect(function (select) {
-			const editor = select('core/editor');
-			const meta = editor.getEditedPostAttribute('meta') || {};
-			const postType = editor.getCurrentPostType();
-			return { meta: meta, postType: postType };
+			const store = getEditorStore();
+			if (!store) return { cssValue: '', postType: '', store: null };
+
+			const editor = select(store);
+			const postType = editor.getCurrentPostType ? editor.getCurrentPostType() : '';
+			let cssValue = '';
+
+			if (postType === 'wp_template') {
+				cssValue = editor.getEditedPostAttribute(META_KEY) || '';
+			} else {
+				const meta = editor.getEditedPostAttribute('meta') || {};
+				cssValue = meta[META_KEY] || '';
+			}
+
+			return { cssValue: cssValue, postType: postType, store: store };
 		}),
 		withDispatch(function (dispatch) {
 			return {
-				setMeta: function (value) {
-					dispatch('core/editor').editPost({
-						meta: { _imaginasite_per_page_css: value }
-					});
+				setMeta: function (value, postType, store) {
+					if (!store) return;
+					
+					if (postType === 'wp_template') {
+						dispatch(store).editPost({
+							[META_KEY]: value
+						});
+					} else {
+						dispatch(store).editPost({
+							meta: { [META_KEY]: value }
+						});
+					}
 				}
 			};
 		})
@@ -420,7 +468,7 @@
 					codeEditorInstance.codemirror.on('change', function (cMirror) {
 						const val = cMirror.getValue();
 
-						props.setMeta(val);
+						props.setMeta(val, props.postType, props.store);
 
 						const invalid = updateCSSValidationState(val);
 						setValidationError(invalid);
@@ -434,7 +482,7 @@
 
 					setStatus('loaded');
 
-					const initialCSS = props.meta._imaginasite_per_page_css || getCurrentCSS();
+					const initialCSS = props.cssValue || getCurrentCSS();
 					setValidationError(updateCSSValidationState(initialCSS));
 					injectPreviewCSS(initialCSS);
 
@@ -525,6 +573,8 @@
 			};
 		}, [textareaElement]);
 
+		if (!PluginDocumentSettingPanel) return null;
+
 		return el(
 			PluginDocumentSettingPanel,
 			{
@@ -612,11 +662,11 @@
 							fontFamily: 'monospace',
 							padding: '10px'
 						},
-						value: props.meta._imaginasite_per_page_css || '',
+						value: props.cssValue || '',
 						onChange: function (e) {
 							const val = e.target ? e.target.value : e;
 
-							props.setMeta(val);
+							props.setMeta(val, props.postType, props.store);
 
 							const invalid = updateCSSValidationState(val);
 							setValidationError(invalid);
@@ -641,11 +691,11 @@
 							border: '1px solid #ccc',
 							borderRadius: '3px'
 						},
-						value: props.meta._imaginasite_per_page_css || '',
+						value: props.cssValue || '',
 						onChange: function (e) {
 							const val = e.target ? e.target.value : e;
 
-							props.setMeta(val);
+							props.setMeta(val, props.postType, props.store);
 
 							const invalid = updateCSSValidationState(val);
 							setValidationError(invalid);
@@ -665,6 +715,10 @@
 	setTimeout(function () {
 		schedulePreviewCSSCheck();
 	}, 500);
+
+	if (!PluginDocumentSettingPanel) {
+		return;
+	}
 
 	registerPlugin('imaginasite-per-page-css', {
 		render: MetaField
