@@ -305,7 +305,7 @@
 	});
 
 	function getInvalidCssMessage() {
-		return i18n.css_invalid || 'The CSS contains a syntax error or unsupported syntax. Please check missing braces, brackets, comments, @import, javascript:, expression(), behavior:, or -moz-binding.';
+		return i18n.css_invalid || 'Invalid or unsupported CSS syntax detected. Please check your code.';
 	}
 
 	function setPostSavingLocked(locked) {
@@ -641,7 +641,7 @@
 							}
 						},
 						i18n.template_notice ||
-							'This CSS will be added to the frontend only when this template is used to render the current page. It will not apply to template parts, patterns, or other templates. Note: for theme templates that have never been saved in the Site Editor, WordPress may need to create a database version of the template before custom CSS can be stored.'
+							'This CSS applies only when this template renders the current page. Unsaved theme templates must be saved first.'
 					)
 					: null,
 

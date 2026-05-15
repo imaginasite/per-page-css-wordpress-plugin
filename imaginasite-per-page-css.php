@@ -253,8 +253,8 @@ class Imaginasite_Per_Page_CSS_Plugin
 				'status' => __('- Status: ', 'imaginasite-per-page-css'),
 				'wp_codeeditor' => __('- wp.codeEditor: ', 'imaginasite-per-page-css'),
 				'container' => __('- Container: ', 'imaginasite-per-page-css'),
-				'css_invalid' => __('The CSS contains a syntax error or unsupported syntax. Please check missing braces, brackets, comments, @import, javascript:, expression(), behavior:, or -moz-binding.', 'imaginasite-per-page-css'),
-				'template_notice' => __('This CSS will be added to the frontend only when this template is used to render the current page. It will not apply to template parts, patterns, or other templates. Note: for theme templates that have never been saved in the Site Editor, WordPress may need to create a database version of the template before custom CSS can be stored.', 'imaginasite-per-page-css'),
+				'css_invalid' => __('Invalid or unsupported CSS syntax detected. Please check your code.', 'imaginasite-per-page-css'),
+				'template_notice' => __('This CSS applies only when this template renders the current page. Unsaved theme templates must be saved first.', 'imaginasite-per-page-css'),
 			),
 		);
 
