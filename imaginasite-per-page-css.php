@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Imaginasite Per Page CSS
  * Plugin URI: https://www.imaginasite.com/per-page-css-wordpress-plugin
- * Description: Adds a CSS style editing field in pages and posts, automatically injected into the head tag with live preview for Gutenberg editor.
+ * Description: Adds a CSS editing field to posts, pages, custom post types, and block templates, with automatic frontend injection and live preview support.
  * Version: 1.5.2
  * Author: Anis MK
  * Author URI: https://www.imaginasite.com
@@ -80,20 +80,25 @@ class Imaginasite_Per_Page_CSS_Plugin
 			self::META_KEY,
 			array(
 				'get_callback'    => function ($template) {
-					$wp_id = isset($template['wp_id']) ? absint($template['wp_id']) : 0;
+					$wp_id = $this->get_template_wp_id($template);
 					if (!$wp_id) {
 						return '';
 					}
 					return get_post_meta($wp_id, self::META_KEY, true);
 				},
 				'update_callback' => function ($value, $template) {
-					if (!$this->is_allowed()) {
-						return new WP_Error('rest_forbidden', __('Sorry, you are not allowed to do that.'), array('status' => rest_authorization_required_code()));
-					}
+					$wp_id = $this->get_template_wp_id($template);
 
-					$wp_id = isset($template->wp_id) ? absint($template->wp_id) : 0;
 					if (!$wp_id) {
 						return false;
+					}
+
+					if (!$this->is_allowed() || !current_user_can('edit_post', $wp_id)) {
+						return new WP_Error(
+							'rest_forbidden',
+							__('Sorry, you are not allowed to do that.'),
+							array('status' => rest_authorization_required_code())
+						);
 					}
 
 					$css = $this->sanitize_css($value);
@@ -169,7 +174,7 @@ class Imaginasite_Per_Page_CSS_Plugin
 	 */
 	public function register_meta()
 	{
-		$post_types = $this->get_supported_post_types();
+		$post_types = $this->get_content_post_types();
 
 		foreach ($post_types as $post_type) {
 			register_post_meta(
@@ -180,8 +185,12 @@ class Imaginasite_Per_Page_CSS_Plugin
 					'single' => true,
 					'show_in_rest' => true,
 					'sanitize_callback' => array($this, 'sanitize_css'),
-					'auth_callback' => function () {
-						return $this->is_allowed();
+					'auth_callback' => function ($allowed, $meta_key, $post_id) {
+						$post_id = absint($post_id);
+
+						return $post_id
+							&& $this->is_allowed()
+							&& current_user_can('edit_post', $post_id);
 					},
 				)
 			);
@@ -199,10 +208,7 @@ class Imaginasite_Per_Page_CSS_Plugin
 
 		$screen = function_exists('get_current_screen') ? get_current_screen() : null;
 
-		// Allow Site Editor only when editing wp_template.
-		if ($screen && (false !== strpos($screen->id, 'site-editor') || 'site-editor' === $screen->base)) {
-			// Do not return here. wp_template support is handled below.
-		}
+
 
 		$post_type = $screen ? $screen->post_type : '';
 
@@ -217,7 +223,7 @@ class Imaginasite_Per_Page_CSS_Plugin
 		// Initialize WordPress core code editor settings (CodeMirror) for CSS.
 		$settings = wp_enqueue_code_editor(array('type' => 'text/css'));
 
-		$dependencies = array('wp-plugins', 'wp-editor', 'wp-element', 'wp-components', 'wp-data', 'wp-compose', 'wp-notices');
+		$dependencies = array('wp-plugins', 'wp-editor', 'wp-element', 'wp-data', 'wp-compose');
 
 		if ($screen && (false !== strpos($screen->id, 'site-editor') || 'site-editor' === $screen->base)) {
 			$dependencies[] = 'wp-edit-site';
@@ -276,6 +282,12 @@ class Imaginasite_Per_Page_CSS_Plugin
 			return;
 		}
 
+		$is_classic_edit = ('post.php' === $hook || 'post-new.php' === $hook);
+
+		if (!$is_classic_edit) {
+			return;
+		}
+
 		$screen = function_exists('get_current_screen') ? get_current_screen() : null;
 		$post_type = $screen ? $screen->post_type : '';
 
@@ -286,29 +298,22 @@ class Imaginasite_Per_Page_CSS_Plugin
 		} elseif (!$post_type && isset($_GET['post_type'])) {
 			$post_type = sanitize_key(wp_unslash($_GET['post_type']));
 		}
-
-		// Detect WooCommerce new product editor (SPA).
-		if (false !== strpos($hook, 'wc-admin') || (isset($_GET['page']) && 'wc-admin' === sanitize_text_field(wp_unslash($_GET['page'])))) {
-			if (isset($_GET['path']) && false !== strpos(sanitize_text_field(wp_unslash($_GET['path'])), '/product')) {
-				$post_type = 'product';
-			}
-		}
 		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 
-		$is_classic_edit = ('post.php' === $hook || 'post-new.php' === $hook);
+		if (!in_array($post_type, $this->get_content_post_types(), true)) {
+			return;
+		}
 
-		if (in_array($post_type, $this->get_supported_post_types(), true)) {
-			$settings = wp_enqueue_code_editor(array('type' => 'text/css'));
+		$settings = wp_enqueue_code_editor(array('type' => 'text/css'));
 
-			if (false !== $settings && $is_classic_edit) {
-				wp_add_inline_script(
-					'code-editor',
-					sprintf(
-						'jQuery(document).ready(function($){if($("#page_post_specific_css_field").length){wp.codeEditor.initialize("page_post_specific_css_field", %s);}});',
-						wp_json_encode($settings)
-					)
-				);
-			}
+		if (false !== $settings) {
+			wp_add_inline_script(
+				'code-editor',
+				sprintf(
+					'jQuery(document).ready(function($){if($("#page_post_specific_css_field").length){wp.codeEditor.initialize("page_post_specific_css_field", %s);}});',
+					wp_json_encode($settings)
+				)
+			);
 		}
 	}
 
@@ -321,11 +326,7 @@ class Imaginasite_Per_Page_CSS_Plugin
 			return;
 		}
 
-		foreach ($this->get_supported_post_types() as $post_type) {
-			if ('wp_template' === $post_type) {
-				continue;
-			}
-
+		foreach ($this->get_content_post_types() as $post_type) {
 			$title = ('page' === $post_type)
 				? __('Specific CSS for this page', 'imaginasite-per-page-css')
 				: __('Specific CSS for this post', 'imaginasite-per-page-css');
@@ -389,7 +390,7 @@ class Imaginasite_Per_Page_CSS_Plugin
 
 		$post_type = get_post_type($post_id);
 
-		if (!in_array($post_type, $this->get_supported_post_types(), true)) {
+		if (!in_array($post_type, $this->get_content_post_types(), true)) {
 			return;
 		}
 
@@ -450,7 +451,7 @@ class Imaginasite_Per_Page_CSS_Plugin
 		}
 
 		echo "\n<style id=\"imaginasite-per-page-css\">\n";
-		echo implode("\n\n", $css_parts); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		echo str_ireplace('</style', '<\/style', implode("\n\n", $css_parts)); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		echo "\n</style>\n";
 	}
 
@@ -571,11 +572,11 @@ class Imaginasite_Per_Page_CSS_Plugin
 	}
 
 	/**
-	 * Get all public post types that support the editor.
+	 * Get the list of content post types (posts, pages, etc.) that support our CSS field.
 	 *
 	 * @return string[]
 	 */
-	private function get_supported_post_types()
+	private function get_content_post_types()
 	{
 		$post_types = get_post_types(
 			array(
@@ -592,17 +593,49 @@ class Imaginasite_Per_Page_CSS_Plugin
 			'wp_block',
 		);
 
-		$supported = array_filter(
+		return array_filter(
 			$post_types,
 			function ($pt) use ($excluded_fse_types) {
 				return post_type_supports($pt, 'editor') && !in_array($pt, $excluded_fse_types, true);
 			}
 		);
+	}
 
-		// Add FSE templates explicitly.
+	/**
+	 * Get all supported post types, including FSE templates.
+	 *
+	 * @return string[]
+	 */
+	private function get_supported_post_types()
+	{
+		$supported = $this->get_content_post_types();
 		$supported[] = 'wp_template';
 
 		return array_unique($supported);
+	}
+
+	/**
+	 * Robustly extract the WordPress post ID from a template object or array.
+	 *
+	 * @param mixed $template Template data from REST API.
+	 *
+	 * @return int
+	 */
+	private function get_template_wp_id($template)
+	{
+		if (is_array($template) && !empty($template['wp_id'])) {
+			return absint($template['wp_id']);
+		}
+
+		if (is_object($template) && !empty($template->wp_id)) {
+			return absint($template->wp_id);
+		}
+
+		if (is_object($template) && !empty($template->ID)) {
+			return absint($template->ID);
+		}
+
+		return 0;
 	}
 }
 

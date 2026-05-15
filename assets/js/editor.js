@@ -7,6 +7,10 @@
 		(wp.editor && wp.editor.PluginDocumentSettingPanel) ||
 		(wp.editPost && wp.editPost.PluginDocumentSettingPanel) ||
 		null;
+
+	if (!PluginDocumentSettingPanel) {
+		return;
+	}
 	const registerPlugin = wp.plugins.registerPlugin;
 	const withSelect = wp.data.withSelect;
 	const withDispatch = wp.data.withDispatch;
@@ -19,7 +23,7 @@
 	const STYLE_ID = 'mg-live-css';
 	const EDITOR_STYLE_ID = 'mg-editor-style';
 	const LOCK_NAME = 'imaginasite-per-page-css-invalid-css';
-	const NOTICE_ID = 'imaginasite-css-error';
+
 	const META_KEY = window.imaginasitePerPageCssData.meta_key || '_imaginasite_per_page_css';
 
 	let lastIframe = null;
@@ -334,13 +338,7 @@
 		lastValidationInvalid = invalid;
 		setPostSavingLocked(invalid);
 
-		if (!invalid) {
-			const noticesDispatch = wp.data.dispatch('core/notices');
 
-			if (noticesDispatch && typeof noticesDispatch.removeNotice === 'function') {
-				noticesDispatch.removeNotice(NOTICE_ID);
-			}
-		}
 
 		return invalid;
 	}
@@ -716,9 +714,7 @@
 		schedulePreviewCSSCheck();
 	}, 500);
 
-	if (!PluginDocumentSettingPanel) {
-		return;
-	}
+
 
 	registerPlugin('imaginasite-per-page-css', {
 		render: MetaField
