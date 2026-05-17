@@ -3,7 +3,7 @@ Contributors: Imaginasite
 Tags: css, custom css, editor, gutenberg, per page css
 Requires at least: 5.8
 Tested up to: 6.9
-Stable tag: 1.6.1
+Stable tag: 1.6.2
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -122,6 +122,9 @@ The plugin restricts CSS editing to administrators with proper privileges and sa
 
 == Upgrade Notice ==
 
+= 1.6.2 =
+Fix: Resolved Gutenberg crashes when editing block patterns (compositions) and template parts in WordPress 6.9+ by correcting store alignment and context detection.
+
 = 1.5.2 =
 Major update: Extended custom CSS functionality to Full Site Editing (FSE) Templates (`wp_template`), allowing per-template CSS injection natively in the Site Editor with full WordPress 6.6+ compatibility and improved template resolution.
 
@@ -138,6 +141,12 @@ This version significantly improves security and user experience with real-time 
 Prevented script from loading on Site Editor and FSE template screens for better compatibility.
 
 == Changelog ==
+
+= 1.6.2 =
+
+* Fix: Resolved Gutenberg crashes when editing block patterns (compositions) and template parts in WordPress 6.9+.
+* Improvement: Added robust entity-type verification to correctly identify and exclude nested FSE blocks in the Site Editor.
+* Improvement: Aligned FSE data store queries to prevent store mismatch issues in WordPress 6.9+.
 
 = 1.6.1 =
 

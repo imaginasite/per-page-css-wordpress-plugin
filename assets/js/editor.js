@@ -26,6 +26,13 @@
 
 	const META_KEY = window.imaginasitePerPageCssData.meta_key || '_imaginasite_per_page_css';
 
+	const EXCLUDED_FSE_TYPES = [
+		'wp_template_part',
+		'wp_global_styles',
+		'wp_navigation',
+		'wp_block'
+	];
+
 	let lastInjectedCSS = null;
 	let debounceTimer = null;
 	let lastValidationInvalid = null;
@@ -50,35 +57,112 @@
 	}
 
 	function getEditorStore() {
-		const editSite = wp.data.select('core/edit-site');
-
-		if (
-			editSite &&
-			typeof editSite.getCurrentPostType === 'function' &&
-			editSite.getCurrentPostType() === 'wp_template'
-		) {
-			return 'core/edit-site';
+		try {
+			if (wp.data.select('core/edit-site')) {
+				return 'core/edit-site';
+			}
+		} catch (e) {
+			console.warn('Imaginasite Per Page CSS - Error checking core/edit-site:', e);
 		}
 
-		if (wp.data.select('core/editor')) {
-			return 'core/editor';
+		try {
+			if (wp.data.select('core/editor')) {
+				return 'core/editor';
+			}
+		} catch (e) {
+			console.warn('Imaginasite Per Page CSS - Error checking core/editor:', e);
 		}
 
 		return null;
+	}
+
+	function isExcludedSiteEditorUrl() {
+		const url = window.location.href;
+
+		return (
+			url.indexOf('postType=wp_template_part') !== -1 ||
+			url.indexOf('/patterns') !== -1 ||
+			url.indexOf('categoryId=template-parts') !== -1 ||
+			url.indexOf('template-part') !== -1
+		);
+	}
+
+	function isExcludedEditorContext(editor) {
+		if (isExcludedSiteEditorUrl()) {
+			return true;
+		}
+
+		if (!editor) {
+			return true;
+		}
+
+		try {
+			const postType =
+				typeof editor.getCurrentPostType === 'function'
+					? editor.getCurrentPostType()
+					: '';
+
+			if (EXCLUDED_FSE_TYPES.indexOf(postType) !== -1) {
+				return true;
+			}
+
+			if (typeof editor.getEditedPostAttribute === 'function') {
+				const type = editor.getEditedPostAttribute('type');
+				const slug = editor.getEditedPostAttribute('slug');
+				const id = editor.getEditedPostAttribute('id');
+
+				if (EXCLUDED_FSE_TYPES.indexOf(type) !== -1) {
+					return true;
+				}
+
+				if (
+					String(type || '').indexOf('wp_template_part') !== -1 ||
+					String(slug || '').indexOf('header') !== -1 ||
+					String(slug || '').indexOf('footer') !== -1 ||
+					String(id || '').indexOf('wp_template_part') !== -1 ||
+					String(id || '').indexOf('//header') !== -1 ||
+					String(id || '').indexOf('//footer') !== -1
+				) {
+					return true;
+				}
+			}
+		} catch (e) {
+			console.warn('Imaginasite Per Page CSS - Error checking editor context:', e);
+			return true;
+		}
+
+		return false;
 	}
 
 	function getCurrentCSS() {
 		const store = getEditorStore();
 		if (!store) return '';
 
-		const postType = wp.data.select(store).getCurrentPostType ? wp.data.select(store).getCurrentPostType() : '';
+		try {
+			const editor = wp.data.select(store);
+			if (!editor) return '';
 
-		if (postType === 'wp_template') {
-			return wp.data.select(store).getEditedPostAttribute(META_KEY) || '';
+			const postType = (typeof editor.getCurrentPostType === 'function') 
+				? editor.getCurrentPostType() 
+				: '';
+
+			if (isExcludedEditorContext(editor)) {
+				return '';
+			}
+
+			if (typeof editor.getEditedPostAttribute === 'function') {
+				if (postType === 'wp_template') {
+					return editor.getEditedPostAttribute(META_KEY) || '';
+				}
+
+				const meta = editor.getEditedPostAttribute('meta') || {};
+				return meta[META_KEY] || '';
+			}
+		} catch (e) {
+			console.warn('Imaginasite Per Page CSS - Error getting current CSS:', e);
 		}
 
-		const meta = wp.data.select(store).getEditedPostAttribute('meta') || {};
-		return meta[META_KEY] || '';
+		return '';
 	}
 
 	function getEditorCanvasIframe() {
@@ -275,16 +359,32 @@
 	function setPostSavingLocked(locked) {
 		const store = getEditorStore();
 		if (!store) return;
-		const editorDispatch = wp.data.dispatch(store);
 
-		if (!editorDispatch) {
-			return;
-		}
+		try {
+			const editor = wp.data.select(store);
+			if (!editor) return;
 
-		if (locked && typeof editorDispatch.lockPostSaving === 'function') {
-			editorDispatch.lockPostSaving(LOCK_NAME);
-		} else if (!locked && typeof editorDispatch.unlockPostSaving === 'function') {
-			editorDispatch.unlockPostSaving(LOCK_NAME);
+			const postType = (typeof editor.getCurrentPostType === 'function') 
+				? editor.getCurrentPostType() 
+				: '';
+
+			if (isExcludedEditorContext(editor)) {
+				return;
+			}
+
+			const editorDispatch = wp.data.dispatch(store);
+
+			if (!editorDispatch) {
+				return;
+			}
+
+			if (locked && typeof editorDispatch.lockPostSaving === 'function') {
+				editorDispatch.lockPostSaving(LOCK_NAME);
+			} else if (!locked && typeof editorDispatch.unlockPostSaving === 'function') {
+				editorDispatch.unlockPostSaving(LOCK_NAME);
+			}
+		} catch (e) {
+			console.warn('Imaginasite Per Page CSS - Error setting post saving lock:', e);
 		}
 	}
 
@@ -326,32 +426,55 @@
 			const store = getEditorStore();
 			if (!store) return { cssValue: '', postType: '', store: null };
 
-			const editor = select(store);
-			const postType = editor.getCurrentPostType ? editor.getCurrentPostType() : '';
-			let cssValue = '';
+			try {
+				const editor = select(store);
+				if (!editor) return { cssValue: '', postType: '', store: null };
 
-			if (postType === 'wp_template') {
-				cssValue = editor.getEditedPostAttribute(META_KEY) || '';
-			} else {
-				const meta = editor.getEditedPostAttribute('meta') || {};
-				cssValue = meta[META_KEY] || '';
+				const postType = (typeof editor.getCurrentPostType === 'function') 
+					? editor.getCurrentPostType() 
+					: '';
+
+				if (isExcludedEditorContext(editor)) {
+					return { cssValue: '', postType: postType, store: null };
+				}
+
+				let cssValue = '';
+
+				if (typeof editor.getEditedPostAttribute === 'function') {
+					if (postType === 'wp_template') {
+						cssValue = editor.getEditedPostAttribute(META_KEY) || '';
+					} else {
+						const meta = editor.getEditedPostAttribute('meta') || {};
+						cssValue = meta[META_KEY] || '';
+					}
+				}
+
+				return { cssValue: cssValue, postType: postType, store: store };
+			} catch (e) {
+				console.warn('Imaginasite Per Page CSS - Error in withSelect:', e);
+				return { cssValue: '', postType: '', store: null };
 			}
-
-			return { cssValue: cssValue, postType: postType, store: store };
 		}),
 		withDispatch(function (dispatch) {
 			return {
 				setMeta: function (value, postType, store) {
 					if (!store) return;
 					
-					if (postType === 'wp_template') {
-						dispatch(store).editPost({
-							[META_KEY]: value
-						});
-					} else {
-						dispatch(store).editPost({
-							meta: { [META_KEY]: value }
-						});
+					try {
+						const editorDispatch = dispatch(store);
+						if (!editorDispatch || typeof editorDispatch.editPost !== 'function') return;
+
+						if (postType === 'wp_template') {
+							editorDispatch.editPost({
+								[META_KEY]: value
+							});
+						} else {
+							editorDispatch.editPost({
+								meta: { [META_KEY]: value }
+							});
+						}
+					} catch (e) {
+						console.warn('Imaginasite Per Page CSS - Error in setMeta dispatch:', e);
 					}
 				}
 			};
@@ -366,16 +489,8 @@
 			setTextareaElement(node);
 		}, []);
 
-		// List of FSE post types to dynamically exclude in the editor
-		const excludedFseTypes = [
-			'wp_template_part',
-			'wp_global_styles',
-			'wp_navigation',
-			'wp_block'
-		];
-
 		// Completely hide the panel if switching to template editing
-		if (excludedFseTypes.indexOf(props.postType) !== -1) {
+		if (!props.store || isExcludedSiteEditorUrl()) {
 			return null;
 		}
 
