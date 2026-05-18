@@ -3,7 +3,7 @@ Contributors: Imaginasite
 Tags: css, custom css, editor, gutenberg, per page css
 Requires at least: 5.8
 Tested up to: 6.9
-Stable tag: 1.6.2
+Stable tag: 1.5.3
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -122,17 +122,17 @@ The plugin restricts CSS editing to administrators with proper privileges and sa
 
 == Upgrade Notice ==
 
-= 1.6.2 =
-Fix: Resolved Gutenberg crashes when editing block patterns (compositions) and template parts in WordPress 6.9+ by correcting store alignment and context detection.
+= 1.5.3 =
+Fix: Removing templates edition to avoid plugin crash + new fieldset in WP7.0 (in templates only).
 
 = 1.5.2 =
-Major update: Extended custom CSS functionality to Full Site Editing (FSE) Templates (`wp_template`), allowing per-template CSS injection natively in the Site Editor with full WordPress 6.6+ compatibility and improved template resolution.
+Extended custom CSS functionality to Full Site Editing (FSE) Templates (`wp_template`), allowing per-template CSS injection natively in the Site Editor with full WordPress 6.6+ compatibility and improved template resolution.
 
 = 1.5.1 =
-Major update: Extended custom CSS functionality to Full Site Editing (FSE) Templates (`wp_template`), allowing per-template CSS injection natively in the Site Editor with full WordPress 6.6+ compatibility.
+Extended custom CSS functionality to Full Site Editing (FSE) Templates (`wp_template`), allowing per-template CSS injection natively in the Site Editor with full WordPress 6.6+ compatibility.
 
 = 1.5.0 =
-Major update: Extended custom CSS functionality to Full Site Editing (FSE) Templates (`wp_template`), allowing per-template CSS injection natively in the Site Editor.
+ Extended custom CSS functionality to Full Site Editing (FSE) Templates (`wp_template`), allowing per-template CSS injection natively in the Site Editor.
 
 = 1.2.7 =
 This version significantly improves security and user experience with real-time CSS validation, editor locking, and enhanced data protection.
@@ -142,22 +142,9 @@ Prevented script from loading on Site Editor and FSE template screens for better
 
 == Changelog ==
 
-= 1.6.2 =
+= 1.5.3 =
 
 * Fix: Resolved Gutenberg crashes when editing block patterns (compositions) and template parts in WordPress 6.9+.
-* Improvement: Added robust entity-type verification to correctly identify and exclude nested FSE blocks in the Site Editor.
-* Improvement: Aligned FSE data store queries to prevent store mismatch issues in WordPress 6.9+.
-
-= 1.6.1 =
-
-* Maintenance: Minor code cleanup and final refinements for the 1.6 branch.
-
-= 1.6.0 =
-
-* Feature: Refactored preview injection system for better performance and reliability.
-* Security: Hardened security with per-post permission checks and improved style tag escaping.
-* Improvement: Optimized asset loading for both Classic and Site Editors.
-* UI: Simplified notification messages and updated translations.
 
 = 1.5.2 =
 
