@@ -27,6 +27,7 @@
 	const META_KEY = window.imaginasitePerPageCssData.meta_key || '_imaginasite_per_page_css';
 
 	const EXCLUDED_FSE_TYPES = [
+		'wp_template',
 		'wp_template_part',
 		'wp_global_styles',
 		'wp_navigation',
@@ -81,6 +82,7 @@
 
 		return (
 			url.indexOf('postType=wp_template_part') !== -1 ||
+			url.indexOf('postType=wp_block') !== -1 ||
 			url.indexOf('/patterns') !== -1 ||
 			url.indexOf('categoryId=template-parts') !== -1 ||
 			url.indexOf('template-part') !== -1
@@ -92,84 +94,33 @@
 			return true;
 		}
 
-		try {
-			// 1. Check FSE specific store directly if registered
-			if (window.wp && window.wp.data && typeof window.wp.data.select === 'function') {
-				const editSiteStore = window.wp.data.select('core/edit-site');
-				if (editSiteStore) {
-					const editedPostType = typeof editSiteStore.getEditedPostType === 'function' ? editSiteStore.getEditedPostType() : '';
-					const editedPostId = typeof editSiteStore.getEditedPostId === 'function' ? editSiteStore.getEditedPostId() : '';
+		const store = getEditorStore();
+		const activeEditor = editor || (
+			window.wp &&
+				window.wp.data &&
+				typeof window.wp.data.select === 'function' &&
+				store
+				? window.wp.data.select(store)
+				: null
+		);
 
-					if (EXCLUDED_FSE_TYPES.indexOf(editedPostType) !== -1) {
-						return true;
-					}
-
-					if (
-						String(editedPostType || '').indexOf('wp_template_part') !== -1 ||
-						String(editedPostId || '').indexOf('wp_template_part') !== -1 ||
-						String(editedPostId || '').indexOf('//header') !== -1 ||
-						String(editedPostId || '').indexOf('//footer') !== -1 ||
-						String(editedPostId || '').indexOf('header') !== -1 ||
-						String(editedPostId || '').indexOf('footer') !== -1
-					) {
-						return true;
-					}
-				}
-
-				// 2. Check general editor store directly if registered
-				const editorStore = window.wp.data.select('core/editor');
-				if (editorStore) {
-					const postType = typeof editorStore.getCurrentPostType === 'function' ? editorStore.getCurrentPostType() : '';
-					
-					if (EXCLUDED_FSE_TYPES.indexOf(postType) !== -1) {
-						return true;
-					}
-
-					if (typeof editorStore.getEditedPostAttribute === 'function') {
-						const type = editorStore.getEditedPostAttribute('type');
-						const slug = editorStore.getEditedPostAttribute('slug');
-						const id = editorStore.getEditedPostAttribute('id');
-
-						if (EXCLUDED_FSE_TYPES.indexOf(type) !== -1) {
-							return true;
-						}
-
-						if (
-							String(type || '').indexOf('wp_template_part') !== -1 ||
-							String(slug || '').indexOf('header') !== -1 ||
-							String(slug || '').indexOf('footer') !== -1 ||
-							String(id || '').indexOf('wp_template_part') !== -1 ||
-							String(id || '').indexOf('//header') !== -1 ||
-							String(id || '').indexOf('//footer') !== -1
-						) {
-							return true;
-						}
-					}
-				}
-			}
-		} catch (e) {
-			console.warn('Imaginasite Per Page CSS - Error checking editor context:', e);
-			return true;
-		}
-
-		if (!editor) {
+		if (!activeEditor) {
 			return false;
 		}
 
 		try {
-			const postType =
-				typeof editor.getCurrentPostType === 'function'
-					? editor.getCurrentPostType()
-					: '';
+			const postType = typeof activeEditor.getCurrentPostType === 'function'
+				? activeEditor.getCurrentPostType()
+				: '';
 
 			if (EXCLUDED_FSE_TYPES.indexOf(postType) !== -1) {
 				return true;
 			}
 
-			if (typeof editor.getEditedPostAttribute === 'function') {
-				const type = editor.getEditedPostAttribute('type');
-				const slug = editor.getEditedPostAttribute('slug');
-				const id = editor.getEditedPostAttribute('id');
+			if (typeof activeEditor.getEditedPostAttribute === 'function') {
+				const type = activeEditor.getEditedPostAttribute('type');
+				const slug = activeEditor.getEditedPostAttribute('slug');
+				const id = activeEditor.getEditedPostAttribute('id');
 
 				if (EXCLUDED_FSE_TYPES.indexOf(type) !== -1) {
 					return true;
@@ -177,52 +128,74 @@
 
 				if (
 					String(type || '').indexOf('wp_template_part') !== -1 ||
-					String(slug || '').indexOf('header') !== -1 ||
-					String(slug || '').indexOf('footer') !== -1 ||
 					String(id || '').indexOf('wp_template_part') !== -1 ||
 					String(id || '').indexOf('//header') !== -1 ||
-					String(id || '').indexOf('//footer') !== -1
+					String(id || '').indexOf('//footer') !== -1 ||
+					String(slug || '').indexOf('header') !== -1 ||
+					String(slug || '').indexOf('footer') !== -1
 				) {
 					return true;
 				}
 			}
 		} catch (e) {
-			console.warn('Imaginasite Per Page CSS - Error checking editor context fallback:', e);
-			return true;
+			console.warn('Imaginasite Per Page CSS - Error checking editor context:', e);
 		}
 
 		return false;
 	}
 
-	function getCurrentCSS() {
-		const store = getEditorStore();
-		if (!store) return '';
+	function isExcludedContext() {
+		const url = window.location.href;
 
-		try {
-			const editor = wp.data.select(store);
-			if (!editor) return '';
-
-			const postType = (typeof editor.getCurrentPostType === 'function') 
-				? editor.getCurrentPostType() 
-				: '';
-
-			if (isExcludedEditorContext(editor)) {
-				return '';
-			}
-
-			if (typeof editor.getEditedPostAttribute === 'function') {
-				if (postType === 'wp_template') {
-					return editor.getEditedPostAttribute(META_KEY) || '';
-				}
-
-				const meta = editor.getEditedPostAttribute('meta') || {};
-				return meta[META_KEY] || '';
-			}
-		} catch (e) {
-			console.warn('Imaginasite Per Page CSS - Error getting current CSS:', e);
+		if (
+			url.indexOf('postType=wp_template_part') !== -1 ||
+			url.indexOf('postType=wp_block') !== -1 ||
+			url.indexOf('/patterns') !== -1 ||
+			url.indexOf('categoryId=template-parts') !== -1
+		) {
+			return true;
 		}
 
-		return '';
+		const store = getEditorStore();
+		if (!store) return true;
+
+		const editor = wp.data.select(store);
+		if (!editor) return true;
+
+		const postType =
+			typeof editor.getCurrentPostType === 'function'
+				? editor.getCurrentPostType()
+				: '';
+
+		if (EXCLUDED_FSE_TYPES.indexOf(postType) !== -1) {
+			return true;
+		}
+
+		return false;
+	}
+	function getCurrentCSS() {
+		if (isExcludedContext()) {
+			return '';
+		}
+
+		const store = getEditorStore();
+		const editor = wp.data.select(store);
+
+		if (!editor || typeof editor.getEditedPostAttribute !== 'function') {
+			return '';
+		}
+
+		const postType =
+			typeof editor.getCurrentPostType === 'function'
+				? editor.getCurrentPostType()
+				: '';
+
+		if (postType === 'wp_template') {
+			return editor.getEditedPostAttribute(META_KEY) || '';
+		}
+
+		const meta = editor.getEditedPostAttribute('meta') || {};
+		return meta[META_KEY] || '';
 	}
 
 	function getEditorCanvasIframe() {
@@ -422,26 +395,27 @@
 
 		try {
 			const editor = wp.data.select(store);
-			if (!editor) return;
-
-			const postType = (typeof editor.getCurrentPostType === 'function') 
-				? editor.getCurrentPostType() 
-				: '';
-
-			if (isExcludedEditorContext(editor)) {
-				return;
-			}
-
 			const editorDispatch = wp.data.dispatch(store);
 
 			if (!editorDispatch) {
 				return;
 			}
 
+			// Toujours permettre le déverrouillage, même dans un contexte exclu.
+			if (!locked && typeof editorDispatch.unlockPostSaving === 'function') {
+				editorDispatch.unlockPostSaving(LOCK_NAME);
+				return;
+			}
+
+			if (!editor) return;
+
+			// Ne jamais verrouiller dans les contextes exclus.
+			if (isExcludedEditorContext(editor)) {
+				return;
+			}
+
 			if (locked && typeof editorDispatch.lockPostSaving === 'function') {
 				editorDispatch.lockPostSaving(LOCK_NAME);
-			} else if (!locked && typeof editorDispatch.unlockPostSaving === 'function') {
-				editorDispatch.unlockPostSaving(LOCK_NAME);
 			}
 		} catch (e) {
 			console.warn('Imaginasite Per Page CSS - Error setting post saving lock:', e);
@@ -484,51 +458,55 @@
 	const MetaField = compose(
 		withSelect(function (select) {
 			const store = getEditorStore();
-			if (!store) return { cssValue: '', postType: '', store: null };
+			if (!store) return { cssValue: '', postType: '', store: null, isExcluded: true };
 
 			try {
 				const editor = select(store);
-				if (!editor) return { cssValue: '', postType: '', store: null };
+				if (!editor) return { cssValue: '', postType: '', store: null, isExcluded: true };
 
-				const postType = (typeof editor.getCurrentPostType === 'function') 
-					? editor.getCurrentPostType() 
+				const postType = (typeof editor.getCurrentPostType === 'function')
+					? editor.getCurrentPostType()
 					: '';
 
-				if (isExcludedEditorContext(editor)) {
-					return { cssValue: '', postType: postType, store: null };
+				const isExcluded = isExcludedEditorContext(editor);
+
+				if (isExcluded) {
+					return {
+						cssValue: '',
+						postType: postType,
+						store: null,
+						isExcluded: true
+					};
 				}
 
 				let cssValue = '';
 
 				if (typeof editor.getEditedPostAttribute === 'function') {
-					if (postType === 'wp_template') {
-						cssValue = editor.getEditedPostAttribute(META_KEY) || '';
-					} else {
-						const meta = editor.getEditedPostAttribute('meta') || {};
-						cssValue = meta[META_KEY] || '';
-					}
+					const meta = editor.getEditedPostAttribute('meta') || {};
+					cssValue = meta[META_KEY] || '';
 				}
 
-				return { cssValue: cssValue, postType: postType, store: store };
+				return {
+					cssValue: cssValue,
+					postType: postType,
+					store: store,
+					isExcluded: false
+				};
 			} catch (e) {
 				console.warn('Imaginasite Per Page CSS - Error in withSelect:', e);
-				return { cssValue: '', postType: '', store: null };
+				if (isExcludedContext()) {
+					return { cssValue: '', postType: '', store: null, isExcluded: true };
+				}
 			}
 		}),
 		withDispatch(function (dispatch) {
 			return {
 				setMeta: function (value, postType, store) {
 					if (!store) return;
-					
+
 					try {
 						const editorDispatch = dispatch(store);
-						if (!editorDispatch || typeof editorDispatch.editPost !== 'function') return;
-
-						if (postType === 'wp_template') {
-							editorDispatch.editPost({
-								[META_KEY]: value
-							});
-						} else {
+						if (editorDispatch && typeof editorDispatch.editPost === 'function') {
 							editorDispatch.editPost({
 								meta: { [META_KEY]: value }
 							});
@@ -549,12 +527,14 @@
 			setTextareaElement(node);
 		}, []);
 
-		// Completely hide the panel if switching to template editing
-		if (!props.store || isExcludedSiteEditorUrl() || isExcludedEditorContext()) {
-			return null;
-		}
+		const isExcluded = props.isExcluded || !props.store;
 
 		useEffect(function () {
+			if (isExcluded) {
+				setPostSavingLocked(false);
+				return;
+			}
+
 			let isMounted = true;
 			let localDebounceTimer = null;
 			let ro = null;
@@ -570,6 +550,7 @@
 			if (!textareaElement) {
 				return;
 			}
+
 
 			const initInstance = function () {
 				if (!isMounted || !textareaElement || !window.wp.codeEditor) {
@@ -700,7 +681,11 @@
 				editorRef.current = null;
 				codeEditorInstance = null;
 			};
-		}, [textareaElement]);
+		}, [textareaElement, isExcluded]);
+
+		if (isExcluded) {
+			return null;
+		}
 
 		if (!PluginDocumentSettingPanel) return null;
 
@@ -753,24 +738,6 @@
 							}
 						},
 						getInvalidCssMessage()
-					)
-					: null,
-
-				props.postType === 'wp_template'
-					? el(
-						'div',
-						{
-							style: {
-								padding: '8px',
-								background: '#f0f6fc',
-								border: '1px solid #72aee6',
-								fontSize: '12px',
-								marginBottom: '10px',
-								borderRadius: '3px'
-							}
-						},
-						i18n.template_notice ||
-							'This CSS applies only when this template renders the current page. Unsaved theme templates must be saved first.'
 					)
 					: null,
 
