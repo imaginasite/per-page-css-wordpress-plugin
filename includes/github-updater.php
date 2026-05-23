@@ -299,7 +299,11 @@ class Imaginasite_GitHub_Updater
 		if (isset($hook_extra['plugin']) && $hook_extra['plugin'] === $this->plugin_basename) {
 			$expected_dir = trailingslashit($remote_source) . $this->slug;
 
-			if ($source !== $expected_dir) {
+			if (untrailingslashit($source) !== $expected_dir) {
+				if ($wp_filesystem->exists($expected_dir)) {
+					$wp_filesystem->delete($expected_dir, true);
+				}
+
 				if ($wp_filesystem->move($source, $expected_dir, true)) {
 					return trailingslashit($expected_dir);
 				}
