@@ -25,12 +25,7 @@ class Imaginasite_Per_Page_CSS_Plugin
 	// Meta key used to store CSS in the post_meta table.
 	const META_KEY = '_imaginasite_per_page_css';
 
-	/**
-	 * Current block template being rendered.
-	 *
-	 * @var WP_Block_Template|null
-	 */
-	private $current_block_template = null;
+
 
 	/**
 	 * Constructor: define all WordPress hooks.
@@ -43,80 +38,13 @@ class Imaginasite_Per_Page_CSS_Plugin
 		add_action('add_meta_boxes', array($this, 'register_classic_metabox'));
 		add_action('save_post', array($this, 'save_classic_metabox'));
 		add_action('wp_head', array($this, 'print_css_in_head'), 99);
-		add_filter('get_block_template', array($this, 'capture_current_block_template'), 10, 3);
-		add_action('rest_api_init', array($this, 'register_template_rest_field'));
 
 		// Prevent Gutenberg/REST and classic editor updates from storing invalid CSS.
 		add_filter('add_post_metadata', array($this, 'prevent_invalid_css_meta_update'), 10, 5);
 		add_filter('update_post_metadata', array($this, 'prevent_invalid_css_meta_update'), 10, 5);
 	}
 
-	/**
-	 * Capture the current block template being rendered.
-	 *
-	 * @param WP_Block_Template|null $template      The resolved block template.
-	 * @param string                 $id             Theme-relative template ID.
-	 * @param string                 $template_type  The template type (e.g., 'wp_template', 'wp_template_part').
-	 *
-	 * @return WP_Block_Template|null
-	 */
-	public function capture_current_block_template($template, $id, $template_type)
-	{
-		if ('wp_template' === $template_type && $template && !empty($template->wp_id)) {
-			$this->current_block_template = $template;
-		}
 
-		return $template;
-	}
-
-	/**
-	 * Register a manual REST API field for wp_template to support meta saving.
-	 * wp_template does not natively support custom-fields via the REST API.
-	 */
-	public function register_template_rest_field()
-	{
-		register_rest_field(
-			'wp_template',
-			self::META_KEY,
-			array(
-				'get_callback' => function ($template) {
-					$wp_id = $this->get_template_wp_id($template);
-					if (!$wp_id) {
-						return '';
-					}
-					return get_post_meta($wp_id, self::META_KEY, true);
-				},
-				'update_callback' => function ($value, $template) {
-					$wp_id = $this->get_template_wp_id($template);
-
-					if (!$wp_id) {
-						return false;
-					}
-
-					if (!$this->is_allowed() || !current_user_can('edit_post', $wp_id)) {
-						return new WP_Error(
-							'rest_forbidden',
-							__('Sorry, you are not allowed to do that.'),
-							array('status' => rest_authorization_required_code())
-						);
-					}
-
-					$css = $this->sanitize_css($value);
-
-					if ('' !== trim((string) $value) && is_wp_error($this->validate_css($css))) {
-						return new WP_Error('invalid_css', __('Invalid CSS.', 'imaginasite-per-page-css'), array('status' => 400));
-					}
-
-					update_post_meta($wp_id, self::META_KEY, wp_slash($css));
-					return true;
-				},
-				'schema' => array(
-					'type' => 'string',
-					'context' => array('view', 'edit'),
-				),
-			)
-		);
-	}
 
 	/**
 	 * Permission check helper.
@@ -207,29 +135,16 @@ class Imaginasite_Per_Page_CSS_Plugin
 		}
 
 		$screen = function_exists('get_current_screen') ? get_current_screen() : null;
-
-
-
 		$post_type = $screen ? $screen->post_type : '';
 
-		if (!$post_type && $screen && (false !== strpos($screen->id, 'site-editor') || 'site-editor' === $screen->base)) {
-			$post_type = 'wp_template';
-		}
-
-		if (!in_array($post_type, $this->get_supported_post_types(), true)) {
+		if (!in_array($post_type, $this->get_content_post_types(), true)) {
 			return;
 		}
 
 		// Initialize WordPress core code editor settings (CodeMirror) for CSS.
 		$settings = wp_enqueue_code_editor(array('type' => 'text/css'));
 
-		$dependencies = array('wp-plugins', 'wp-editor', 'wp-element', 'wp-data', 'wp-compose');
-
-		if ($screen && (false !== strpos($screen->id, 'site-editor') || 'site-editor' === $screen->base)) {
-			$dependencies[] = 'wp-edit-site';
-		} else {
-			$dependencies[] = 'wp-edit-post';
-		}
+		$dependencies = array('wp-plugins', 'wp-editor', 'wp-element', 'wp-data', 'wp-compose', 'wp-edit-post');
 
 		wp_enqueue_script(
 			'imaginasite-per-page-css',
@@ -239,9 +154,7 @@ class Imaginasite_Per_Page_CSS_Plugin
 			true
 		);
 
-		if ('wp_template' === $post_type) {
-			$panel_title = __('Specific CSS for this template', 'imaginasite-per-page-css');
-		} elseif ('page' === $post_type) {
+		if ('page' === $post_type) {
 			$panel_title = __('Specific CSS for this page', 'imaginasite-per-page-css');
 		} else {
 			$panel_title = __('Specific CSS for this post', 'imaginasite-per-page-css');
@@ -260,7 +173,6 @@ class Imaginasite_Per_Page_CSS_Plugin
 				'wp_codeeditor' => __('- wp.codeEditor: ', 'imaginasite-per-page-css'),
 				'container' => __('- Container: ', 'imaginasite-per-page-css'),
 				'css_invalid' => __('Invalid or unsupported CSS syntax detected. Please check your code.', 'imaginasite-per-page-css'),
-				'template_notice' => __('This CSS applies only when this template renders the current page. Unsaved theme templates must be saved first.', 'imaginasite-per-page-css'),
 			),
 		);
 
@@ -435,16 +347,7 @@ class Imaginasite_Per_Page_CSS_Plugin
 			}
 		}
 
-		$template_id = $this->get_current_template_post_id();
 
-		if ($template_id) {
-			$template_css = get_post_meta($template_id, self::META_KEY, true);
-			$template_css = $this->sanitize_css($template_css);
-
-			if (!empty($template_css) && !is_wp_error($this->validate_css($template_css))) {
-				$css_parts[] = "/* Imaginasite Per Page CSS: template */\n" . $template_css;
-			}
-		}
 
 		if (empty($css_parts)) {
 			return;
@@ -455,69 +358,7 @@ class Imaginasite_Per_Page_CSS_Plugin
 		echo "\n</style>\n";
 	}
 
-	private function get_current_template_post_id()
-	{
-		if (
-			$this->current_block_template &&
-			!empty($this->current_block_template->wp_id)
-		) {
-			return absint($this->current_block_template->wp_id);
-		}
 
-		if (!function_exists('get_block_template') || !function_exists('get_stylesheet')) {
-			return 0;
-		}
-
-		$theme = get_stylesheet();
-		$candidates = array();
-
-		if (is_front_page()) {
-			$candidates[] = 'front-page';
-		}
-
-		if (is_home()) {
-			$candidates[] = 'home';
-		}
-
-		if (is_page()) {
-			$candidates[] = 'page';
-		}
-
-		if (is_singular()) {
-			$post_type = get_post_type();
-
-			if ($post_type) {
-				$candidates[] = 'single-' . $post_type;
-			}
-
-			$candidates[] = 'single';
-			$candidates[] = 'singular';
-		}
-
-		if (is_archive()) {
-			$candidates[] = 'archive';
-		}
-
-		if (is_search()) {
-			$candidates[] = 'search';
-		}
-
-		if (is_404()) {
-			$candidates[] = '404';
-		}
-
-		$candidates[] = 'index';
-
-		foreach (array_unique($candidates) as $slug) {
-			$template = get_block_template($theme . '//' . $slug, 'wp_template');
-
-			if ($template && !empty($template->wp_id)) {
-				return absint($template->wp_id);
-			}
-		}
-
-		return 0;
-	}
 
 	/**
 	 * Validate CSS to prevent markup/script injection and unsupported dangerous CSS patterns.
@@ -601,42 +442,7 @@ class Imaginasite_Per_Page_CSS_Plugin
 		);
 	}
 
-	/**
-	 * Get all supported post types, including FSE templates.
-	 *
-	 * @return string[]
-	 */
-	private function get_supported_post_types()
-	{
-		$supported = $this->get_content_post_types();
-		$supported[] = 'wp_template';
 
-		return array_unique($supported);
-	}
-
-	/**
-	 * Robustly extract the WordPress post ID from a template object or array.
-	 *
-	 * @param mixed $template Template data from REST API.
-	 *
-	 * @return int
-	 */
-	private function get_template_wp_id($template)
-	{
-		if (is_array($template) && !empty($template['wp_id'])) {
-			return absint($template['wp_id']);
-		}
-
-		if (is_object($template) && !empty($template->wp_id)) {
-			return absint($template->wp_id);
-		}
-
-		if (is_object($template) && !empty($template->ID)) {
-			return absint($template->ID);
-		}
-
-		return 0;
-	}
 }
 
 // Start the plugin.

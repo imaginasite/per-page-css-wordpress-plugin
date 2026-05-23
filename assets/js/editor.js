@@ -78,15 +78,7 @@
 	}
 
 	function isExcludedSiteEditorUrl() {
-		const url = window.location.href;
-
-		return (
-			url.indexOf('postType=wp_template_part') !== -1 ||
-			url.indexOf('postType=wp_block') !== -1 ||
-			url.indexOf('/patterns') !== -1 ||
-			url.indexOf('categoryId=template-parts') !== -1 ||
-			url.indexOf('template-part') !== -1
-		);
+		return window.location.href.indexOf('site-editor.php') !== -1;
 	}
 
 	function isExcludedEditorContext(editor) {
@@ -145,14 +137,7 @@
 	}
 
 	function isExcludedContext() {
-		const url = window.location.href;
-
-		if (
-			url.indexOf('postType=wp_template_part') !== -1 ||
-			url.indexOf('postType=wp_block') !== -1 ||
-			url.indexOf('/patterns') !== -1 ||
-			url.indexOf('categoryId=template-parts') !== -1
-		) {
+		if (window.location.href.indexOf('site-editor.php') !== -1) {
 			return true;
 		}
 
@@ -190,9 +175,7 @@
 				? editor.getCurrentPostType()
 				: '';
 
-		if (postType === 'wp_template') {
-			return editor.getEditedPostAttribute(META_KEY) || '';
-		}
+
 
 		const meta = editor.getEditedPostAttribute('meta') || {};
 		return meta[META_KEY] || '';
