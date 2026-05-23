@@ -63,7 +63,7 @@ class Imaginasite_GitHub_Updater
 
 		add_filter('pre_set_site_transient_update_plugins', array($this, 'check_update'));
 		add_filter('plugins_api', array($this, 'plugin_popup'), 10, 3);
-		add_filter('upgrader_post_install', array($this, 'after_install'), 10, 3);
+		add_filter('upgrader_source_selection', array($this, 'upgrader_source_selection'), 10, 4);
 	}
 
 	/**
@@ -279,36 +279,33 @@ class Imaginasite_GitHub_Updater
 	}
 
 	/**
-	 * Perform actions after the plugin has been installed.
+	 * Rename the extracted folder to match the plugin slug.
 	 *
 	 * GitHub zipballs often contain a directory named 'repo-name-hash'.
 	 * We need to ensure the plugin stays in its correct directory.
 	 *
-	 * @param bool|WP_Error $response   Installation response.
-	 * @param array         $hook_extra Extra arguments passed to hooked filters.
-	 * @param array         $result     Installation result data.
+	 * @param string      $source        File source location.
+	 * @param string      $remote_source Remote file source location.
+	 * @param WP_Upgrader $upgrader      WP_Upgrader instance.
+	 * @param array       $hook_extra    Extra arguments passed to hooked filters.
 	 *
-	 * @return array
+	 * @return string
 	 */
-	public function after_install($response, $hook_extra, $result)
+	public function upgrader_source_selection($source, $remote_source, $upgrader, $hook_extra = null)
 	{
 		global $wp_filesystem;
 
-		if (empty($result['destination'])) {
-			return $result;
-		}
+		// Ensure we are only targeting this specific plugin update.
+		if (isset($hook_extra['plugin']) && $hook_extra['plugin'] === $this->plugin_basename) {
+			$expected_dir = trailingslashit($remote_source) . $this->slug;
 
-		$plugin_dir = WP_PLUGIN_DIR . '/' . $this->slug;
-
-		if ($result['destination'] !== $plugin_dir) {
-			if ($wp_filesystem->exists($plugin_dir)) {
-				$wp_filesystem->delete($plugin_dir, true);
+			if ($source !== $expected_dir) {
+				if ($wp_filesystem->move($source, $expected_dir, true)) {
+					return trailingslashit($expected_dir);
+				}
 			}
-
-			$wp_filesystem->move($result['destination'], $plugin_dir);
-			$result['destination'] = $plugin_dir;
 		}
 
-		return $result;
+		return $source;
 	}
 }
