@@ -150,7 +150,7 @@ class Imaginasite_Per_Page_CSS_Plugin
 			'imaginasite-per-page-css',
 			plugins_url('assets/js/editor.js', __FILE__),
 			$dependencies,
-			'1.6.2',
+			'1.5.6',
 			true
 		);
 
