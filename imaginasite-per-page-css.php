@@ -2,8 +2,8 @@
 /**
  * Plugin Name: Imaginasite Per Page CSS
  * Plugin URI: https://www.imaginasite.com/per-page-css-wordpress-plugin
- * Description: Adds a CSS editing field to posts, pages, custom post types, and block templates, with automatic frontend injection and live preview support.
- * Version: 1.5.7
+ * Description: Adds a CSS editing field to posts, pages, and custom post types, with automatic frontend injection and live preview support.
+ * Version: 1.5.8
  * Author: Anis MK
  * Author URI: https://www.imaginasite.com
  * Text Domain: imaginasite-per-page-css
@@ -150,7 +150,7 @@ class Imaginasite_Per_Page_CSS_Plugin
 			'imaginasite-per-page-css',
 			plugins_url('assets/js/editor.js', __FILE__),
 			$dependencies,
-			'1.5.7',
+			'1.5.8',
 			true
 		);
 
