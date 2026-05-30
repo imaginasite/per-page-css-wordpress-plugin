@@ -356,13 +356,7 @@
 
 
 
-	const unsubscribePreviewCSS = wp.data.subscribe(function () {
-		clearTimeout(debounceTimer);
 
-		debounceTimer = setTimeout(function () {
-			injectPreviewCSS(getCurrentCSS());
-		}, 300);
-	});
 
 	window.addEventListener('load', function () {
 		injectPreviewCSS(getCurrentCSS(), true);
@@ -420,21 +414,9 @@
 		return invalid;
 	}
 
-	const unsubscribeValidationLock = wp.data.subscribe(function () {
-		updateCSSValidationState(getCurrentCSS());
-	});
-
 	updateCSSValidationState(getCurrentCSS());
 
 	window.addEventListener('beforeunload', function () {
-		if (typeof unsubscribePreviewCSS === 'function') {
-			unsubscribePreviewCSS();
-		}
-
-		if (typeof unsubscribeValidationLock === 'function') {
-			unsubscribeValidationLock();
-		}
-
 		setPostSavingLocked(false);
 	});
 

@@ -77,6 +77,14 @@ class Imaginasite_GitHub_Updater
 			return $this->github_response;
 		}
 
+		$transient_key = 'imaginasite_per_page_css_gh_release';
+		$cached = get_transient($transient_key);
+
+		if (false !== $cached) {
+			$this->github_response = $cached;
+			return $this->github_response;
+		}
+
 		$url = "https://api.github.com/repos/{$this->github_repo}/releases/latest";
 
 		$args = array(
@@ -94,6 +102,10 @@ class Imaginasite_GitHub_Updater
 		}
 
 		$this->github_response = json_decode(wp_remote_retrieve_body($response));
+
+		if ($this->github_response) {
+			set_transient($transient_key, $this->github_response, 12 * HOUR_IN_SECONDS);
+		}
 
 		return $this->github_response;
 	}

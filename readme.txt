@@ -3,7 +3,7 @@ Contributors: Imaginasite
 Tags: css, custom css, editor, gutenberg, per page css
 Requires at least: 5.8
 Tested up to: 7.0
-Stable tag: 1.5.6
+Stable tag: 1.5.7
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -122,7 +122,7 @@ The plugin restricts CSS editing to administrators with proper privileges and sa
 
 == Upgrade Notice ==
 
-= 1.5.6 =
+= 1.5.7 =
 Version bump.
 
 = 1.5.5 =
@@ -151,7 +151,7 @@ Prevented script from loading on Site Editor and FSE template screens for better
 
 == Changelog ==
 
-= 1.5.6 =
+= 1.5.7 =
 
 * Version bump.
 
@@ -208,4 +208,4 @@ Prevented script from loading on Site Editor and FSE template screens for better
 
 = 1.2.0 =
 
-* Initial release for the WordPress.org repository.
+* Initial release.
