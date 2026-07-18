@@ -3,7 +3,7 @@ Contributors: Imaginasite
 Tags: css, custom css, editor, gutenberg, per page css
 Requires at least: 5.8
 Tested up to: 7.0
-Stable tag: 1.5.8
+Stable tag: 1.5.9
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -122,6 +122,9 @@ The plugin restricts CSS editing to administrators with proper privileges and sa
 
 == Upgrade Notice ==
 
+= 1.5.9 =
+Fixes false CSS validation errors for modern CSS Grid syntax such as `1fr`.
+
 = 1.5.8 =
 Version bump.
 
@@ -135,13 +138,13 @@ Fix: Updater logic correctly preserves plugin directory during updates.
 Fix: Removing templates edition to avoid plugin crash + new fieldset in WP7.0 (in templates only).
 
 = 1.5.2 =
-Extended custom CSS functionality to Full Site Editing (FSE) Templates (`wp_template`), allowing per-template CSS injection natively in the Site Editor with full WordPress 6.6+ compatibility and improved template resolution.
+Historical note: FSE template support was introduced experimentally in this release, then disabled again in 1.5.3 due to Site Editor compatibility issues.
 
 = 1.5.1 =
-Extended custom CSS functionality to Full Site Editing (FSE) Templates (`wp_template`), allowing per-template CSS injection natively in the Site Editor with full WordPress 6.6+ compatibility.
+Historical note: experimental FSE template support was introduced in this release, then disabled again in 1.5.3.
 
 = 1.5.0 =
- Extended custom CSS functionality to Full Site Editing (FSE) Templates (`wp_template`), allowing per-template CSS injection natively in the Site Editor.
+Historical note: experimental FSE template support was introduced in this release, then disabled again in 1.5.3.
 
 = 1.2.7 =
 This version significantly improves security and user experience with real-time CSS validation, editor locking, and enhanced data protection.
@@ -150,6 +153,13 @@ This version significantly improves security and user experience with real-time 
 Prevented script from loading on Site Editor and FSE template screens for better compatibility.
 
 == Changelog ==
+
+= 1.5.9 =
+
+* Fix: Disabled outdated CodeMirror CSS linting to prevent false errors on modern CSS Grid units such as `1fr`.
+* Fix: Improved Gutenberg editor fallback behavior when editor state lookup fails.
+* Improvement: Removed raw diagnostic text from the editor panel loading state.
+* Improvement: Cleaned up obsolete FSE/template documentation and translation source strings.
 
 = 1.5.8 =
 
@@ -169,18 +179,18 @@ Prevented script from loading on Site Editor and FSE template screens for better
 
 = 1.5.2 =
 
-* Fix: Improved FSE template resolution fallback logic using native `get_block_template` for reliable styling.
+* Historical note: Improved experimental FSE template resolution fallback logic. FSE template editing was disabled again in 1.5.3.
 
 = 1.5.1 =
 
 * Fix: Resolved REST API constraints and unified Site Editor compatibility for WordPress 6.6+.
-* Feature: Extended support to FSE Templates (`wp_template`).
-* Improvement: Added contextual notices and improved UI integration within the Site Editor.
+* Historical note: Added experimental support to FSE Templates (`wp_template`). This was disabled again in 1.5.3.
+* Historical note: Added contextual notices and improved UI integration within the Site Editor.
 
 = 1.5.0 =
 
-* Feature: Extended support to FSE Templates (`wp_template`).
-* Improvement: Added contextual notices and improved UI integration within the Site Editor.
+* Historical note: Added experimental support to FSE Templates (`wp_template`). This was disabled again in 1.5.3.
+* Historical note: Added contextual notices and improved UI integration within the Site Editor.
 
 = 1.2.7 =
 

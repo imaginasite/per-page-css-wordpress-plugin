@@ -28,32 +28,14 @@ msgstr "Erreur JS : "
 msgid "Timeout: wp.codeEditor unavailable"
 msgstr "Temps écoulé : wp.codeEditor n'est pas disponible"
 
-msgid "DIAGNOSTIC:\n"
-msgstr "DIAGNOSTIC :\n"
-
-msgid "- Status: "
-msgstr "- Statut : "
-
-msgid "- wp.codeEditor: "
-msgstr "- wp.codeEditor : "
-
-msgid "- Container: "
-msgstr "- Conteneur : "
-
-msgid "Adds a CSS style editing field with live preview in pages and posts, automatically injected into the head tag."
-msgstr "Ajoute un champ d'édition de styles CSS avec aperçu en direct dans les pages et articles, injecté automatiquement dans la balise head."
+msgid "Adds a CSS editing field to posts, pages, and custom post types, with automatic frontend injection and live preview support."
+msgstr "Ajoute un champ d'édition CSS aux articles, pages et types de publication personnalisés, avec injection automatique côté site et aperçu en direct."
 
 msgid "Imaginasite Per Page CSS"
 msgstr "Imaginasite Per Page CSS"
 
-msgid "Specific CSS for this template"
-msgstr "Styles CSS pour ce template"
-
 msgid "Invalid or unsupported CSS syntax detected. Please check your code."
 msgstr "Syntaxe CSS invalide ou non supportée détectée. Veuillez vérifier votre code."
-
-msgid "This CSS applies only when this template renders the current page. Unsaved theme templates must be saved first."
-msgstr "Ce CSS s'applique uniquement quand ce template affiche la page. Les templates du thème doivent être enregistrés avant d'ajouter du CSS."
 
 msgid "Markup is not allowed in CSS."
 msgstr "Les balises HTML ne sont pas autorisées dans le CSS."
@@ -63,9 +45,3 @@ msgstr "Le CSS contient un nombre impair d'accolades {}."
 
 msgid "CSS contains imbalanced square brackets."
 msgstr "Le CSS contient un nombre impair de crochets []."
-
-msgid "Sorry, you are not allowed to do that."
-msgstr "Désolé, vous n'êtes pas autorisé à faire cela."
-
-msgid "Invalid CSS."
-msgstr "CSS invalide."

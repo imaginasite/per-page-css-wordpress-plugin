@@ -462,6 +462,8 @@
 				if (isExcludedContext()) {
 					return { cssValue: '', postType: '', store: null, isExcluded: true };
 				}
+
+				return { cssValue: '', postType: '', store: store, isExcluded: false };
 			}
 		}),
 		withDispatch(function (dispatch) {
@@ -667,7 +669,7 @@
 					style: { marginBottom: '20px' }
 				},
 
-				status !== 'loaded'
+				status !== 'loaded' && status !== 'loading'
 					? el(
 						'div',
 						{
@@ -675,17 +677,13 @@
 								padding: '8px',
 								background: '#f8f9fa',
 								border: '1px solid #ccc',
-								fontSize: '11px',
+								fontSize: '12px',
 								marginBottom: '10px',
 								borderRadius: '3px',
-								fontFamily: 'monospace',
-								whiteSpace: 'pre-wrap'
+								whiteSpace: 'normal'
 							}
 						},
-						i18n.diagnostic + '\n' +
-						i18n.status + status + '\n' +
-						i18n.wp_codeeditor + (window.wp && window.wp.codeEditor ? 'OK' : 'NULL') + '\n' +
-						i18n.container + (textareaElement ? 'OK' : 'NULL')
+						status
 					)
 					: null,
 

@@ -3,7 +3,7 @@
  * Plugin Name: Imaginasite Per Page CSS
  * Plugin URI: https://www.imaginasite.com/per-page-css-wordpress-plugin
  * Description: Adds a CSS editing field to posts, pages, and custom post types, with automatic frontend injection and live preview support.
- * Version: 1.5.8
+ * Version: 1.5.9
  * Author: Anis MK
  * Author URI: https://www.imaginasite.com
  * Text Domain: imaginasite-per-page-css
@@ -141,8 +141,7 @@ class Imaginasite_Per_Page_CSS_Plugin
 			return;
 		}
 
-		// Initialize WordPress core code editor settings (CodeMirror) for CSS.
-		$settings = wp_enqueue_code_editor(array('type' => 'text/css'));
+		$settings = $this->get_css_code_editor_settings();
 
 		$dependencies = array('wp-plugins', 'wp-editor', 'wp-element', 'wp-data', 'wp-compose', 'wp-edit-post');
 
@@ -150,7 +149,7 @@ class Imaginasite_Per_Page_CSS_Plugin
 			'imaginasite-per-page-css',
 			plugins_url('assets/js/editor.js', __FILE__),
 			$dependencies,
-			'1.5.8',
+			'1.5.9',
 			true
 		);
 
@@ -168,10 +167,6 @@ class Imaginasite_Per_Page_CSS_Plugin
 				'js_error' => __('JS Error: ', 'imaginasite-per-page-css'),
 				'timeout' => __('Timeout: wp.codeEditor unavailable', 'imaginasite-per-page-css'),
 				'panel_title' => $panel_title,
-				'diagnostic' => __('DIAGNOSTIC:\n', 'imaginasite-per-page-css'),
-				'status' => __('- Status: ', 'imaginasite-per-page-css'),
-				'wp_codeeditor' => __('- wp.codeEditor: ', 'imaginasite-per-page-css'),
-				'container' => __('- Container: ', 'imaginasite-per-page-css'),
 				'css_invalid' => __('Invalid or unsupported CSS syntax detected. Please check your code.', 'imaginasite-per-page-css'),
 			),
 		);
@@ -216,7 +211,7 @@ class Imaginasite_Per_Page_CSS_Plugin
 			return;
 		}
 
-		$settings = wp_enqueue_code_editor(array('type' => 'text/css'));
+		$settings = $this->get_css_code_editor_settings();
 
 		if (false !== $settings) {
 			wp_add_inline_script(
@@ -410,6 +405,31 @@ class Imaginasite_Per_Page_CSS_Plugin
 		$css = str_replace("\0", '', $css);
 
 		return $css;
+	}
+
+	/**
+	 * Get CodeMirror settings for CSS editing.
+	 *
+	 * WordPress ships CSSLint with CodeMirror, and older CSSLint versions can
+	 * report modern CSS such as Grid `fr` units as invalid.
+	 *
+	 * @return array|false
+	 */
+	private function get_css_code_editor_settings()
+	{
+		$settings = wp_enqueue_code_editor(array('type' => 'text/css'));
+
+		if (false === $settings) {
+			return false;
+		}
+
+		if (!isset($settings['codemirror']) || !is_array($settings['codemirror'])) {
+			$settings['codemirror'] = array();
+		}
+
+		$settings['codemirror']['lint'] = false;
+
+		return $settings;
 	}
 
 	/**

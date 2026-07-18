@@ -2,7 +2,7 @@
 # This file is distributed under the GPLv2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Imaginasite Per Page CSS 1.5.2\n"
+"Project-Id-Version: Imaginasite Per Page CSS 1.5.9\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/imaginasite-per-page-css\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -26,7 +26,7 @@ msgstr ""
 
 #. Description of the plugin
 #: imaginasite-per-page-css.php
-msgid "Adds a CSS style editing field in pages and posts, automatically injected into the head tag with live preview for Gutenberg editor."
+msgid "Adds a CSS editing field to posts, pages, and custom post types, with automatic frontend injection and live preview support."
 msgstr ""
 
 #. Author of the plugin
@@ -39,76 +39,48 @@ msgstr ""
 msgid "https://www.imaginasite.com"
 msgstr ""
 
-#: imaginasite-per-page-css.php:102
-msgid "Invalid CSS."
-msgstr ""
-
-#: imaginasite-per-page-css.php:237
-msgid "Specific CSS for this template"
-msgstr ""
-
-#: imaginasite-per-page-css.php:239
-#: imaginasite-per-page-css.php:330
+#: imaginasite-per-page-css.php:158
+#: imaginasite-per-page-css.php:243
 msgid "Specific CSS for this page"
 msgstr ""
 
-#: imaginasite-per-page-css.php:241
-#: imaginasite-per-page-css.php:331
+#: imaginasite-per-page-css.php:160
+#: imaginasite-per-page-css.php:244
 msgid "Specific CSS for this post"
 msgstr ""
 
-#: imaginasite-per-page-css.php:248
+#: imaginasite-per-page-css.php:167
 msgid "Syntax highlighting disabled in your profile."
 msgstr ""
 
-#: imaginasite-per-page-css.php:249
+#: imaginasite-per-page-css.php:168
 msgid "JS Error: "
 msgstr ""
 
-#: imaginasite-per-page-css.php:250
+#: imaginasite-per-page-css.php:169
 msgid "Timeout: wp.codeEditor unavailable"
 msgstr ""
 
-#: imaginasite-per-page-css.php:252
-msgid "DIAGNOSTIC:\\n"
-msgstr ""
-
-#: imaginasite-per-page-css.php:253
-msgid "- Status: "
-msgstr ""
-
-#: imaginasite-per-page-css.php:254
-msgid "- wp.codeEditor: "
-msgstr ""
-
-#: imaginasite-per-page-css.php:255
-msgid "- Container: "
-msgstr ""
-
-#: imaginasite-per-page-css.php:256
+#: imaginasite-per-page-css.php:171
 msgid "Invalid or unsupported CSS syntax detected. Please check your code."
 msgstr ""
 
-#: imaginasite-per-page-css.php:257
-msgid "This CSS applies only when this template renders the current page. Unsaved theme templates must be saved first."
-msgstr ""
-
-#: imaginasite-per-page-css.php:533
+#: imaginasite-per-page-css.php:374
 msgid "Markup is not allowed in CSS."
 msgstr ""
 
-#: imaginasite-per-page-css.php:537
+#: imaginasite-per-page-css.php:379
 msgid "CSS contains imbalanced curly brackets."
 msgstr ""
 
-#: imaginasite-per-page-css.php:541
+#: imaginasite-per-page-css.php:383
 msgid "CSS contains imbalanced square brackets."
 msgstr ""
 
-#: imaginasite-per-page-css.php:545
+#: imaginasite-per-page-css.php:387
 msgid "CSS contains an unterminated comment."
 msgstr ""
 
-#: imaginasite-per-page-css.php:549
+#: imaginasite-per-page-css.php:391
 msgid "This CSS contains unsafe or unsupported syntax."
 msgstr ""
