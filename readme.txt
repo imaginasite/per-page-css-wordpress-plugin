@@ -2,8 +2,8 @@
 Contributors: Imaginasite
 Tags: css, custom css, editor, gutenberg, per page css
 Requires at least: 5.8
-Tested up to: 7.0
-Stable tag: 1.5.9
+Tested up to: 7.1
+Stable tag: 1.6.3
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -122,6 +122,9 @@ The plugin restricts CSS editing to administrators with proper privileges and sa
 
 == Upgrade Notice ==
 
+= 1.6.3 =
+Compatibility update for WordPress 7.1, including safer Gutenberg and Site Editor context detection.
+
 = 1.5.9 =
 Fixes false CSS validation errors for modern CSS Grid syntax such as `1fr`.
 
@@ -153,6 +156,11 @@ This version significantly improves security and user experience with real-time 
 Prevented script from loading on Site Editor and FSE template screens for better compatibility.
 
 == Changelog ==
+
+= 1.6.3 =
+
+* Compatibility: Updated the tested WordPress version to 7.1.
+* Fix: Hardened Gutenberg and Site Editor context detection for current WordPress editor stores.
 
 = 1.5.9 =
 

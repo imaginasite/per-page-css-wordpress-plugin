@@ -58,8 +58,13 @@
 	}
 
 	function getEditorStore() {
+		if (!window.wp || !wp.data || typeof wp.data.select !== 'function') {
+			return null;
+		}
+
 		try {
-			if (wp.data.select('core/edit-site')) {
+			const editSite = wp.data.select('core/edit-site');
+			if (editSite && typeof editSite.getCurrentPostType === 'function') {
 				return 'core/edit-site';
 			}
 		} catch (e) {
@@ -144,7 +149,14 @@
 		const store = getEditorStore();
 		if (!store) return true;
 
-		const editor = wp.data.select(store);
+		let editor;
+
+		try {
+			editor = wp.data.select(store);
+		} catch (e) {
+			return true;
+		}
+
 		if (!editor) return true;
 
 		const postType =
